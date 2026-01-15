@@ -28,11 +28,11 @@ This document maps the implemented keylib functionality to the exact technical r
 
 ### Implementation
 
-| Spec Requirement            | Implementation                                    | File:Line                                                                            |
-| --------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| Elevation from Hedera types | `PrivateKeyFromHedera()`, `PublicKeyFromHedera()` | [factory.go:75-111](factory.go#L75-L111), [factory.go:161-179](factory.go#L161-L179) |
-| Elevation from raw bytes    | `PrivateKeyFromBytes()`, `PublicKeyFromBytes()`   | [factory.go:54-66](factory.go#L54-L66), [factory.go:142-157](factory.go#L142-L157)   |
-| Elevation from hex strings  | `ParsePrivateKeyHex()`, `ParsePublicKeyHex()`     | [factory.go:33-50](factory.go#L33-L50), [factory.go:121-138](factory.go#L121-L138)   |
+| Spec Requirement            | Implementation                                    | File:Line                                                                                                    |
+| --------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Elevation from Hedera types | `PrivateKeyFromHedera()`, `PublicKeyFromHedera()` | [factory.go:75-111](keylib/factory.go#L75-L111), [factory.go:161-179](keylib/factory.go#L161-L179)           |
+| Elevation from raw bytes    | `PrivateKeyFromBytes()`, `PublicKeyFromBytes()`   | [factory.go:54-66](keylib/factory.go#L54-L66), [factory.go:142-157](keylib/factory.go#L142-L157)             |
+| Elevation from hex strings  | `ParsePrivateKeyHex()`, `ParsePublicKeyHex()`     | [factory.go:33-50](keylib/factory.go#L33-L50), [factory.go:121-138](keylib/factory.go#L121-L138)             |
 
 ### Core Types
 
@@ -48,7 +48,7 @@ type NeuronPublicKey struct {
 }
 ```
 
-**Files**: [private_key.go](private_key.go), [public_key.go](public_key.go)
+**Files**: [private_key.go](keylib/private_key.go), [public_key.go](keylib/public_key.go)
 
 ---
 
@@ -68,7 +68,7 @@ type NeuronPublicKey struct {
 
 ### Ed25519 Detection (QA/QC Enhancement)
 
-**File**: [factory.go:231-257](factory.go#L231-L257)
+**File**: [factory.go:231-257](keylib/factory.go#L231-L257)
 
 Detection uses three methods:
 
@@ -105,19 +105,19 @@ func IsEd25519Key(hederaKey hiero.PrivateKey) bool {
 
 ### Implementation Matrix
 
-| From              | To                 | Method                   | File:Line                                          |
-| ----------------- | ------------------ | ------------------------ | -------------------------------------------------- |
-| NeuronPublicKey   | EVMAddress         | `EVMAddress()`           | [public_key.go:84-93](public_key.go#L84-L93)       |
-| NeuronPublicKey   | PeerID             | `PeerID()`               | [public_key.go:110-118](public_key.go#L110-L118)   |
-| NeuronPublicKey   | Hedera PublicKey   | `ToHederaPublicKey()`    | [public_key.go:143-156](public_key.go#L143-L156)   |
-| NeuronPublicKey   | \*ecdsa.PublicKey  | `ToECDSA()`              | [public_key.go:123-136](public_key.go#L123-L136)   |
-| NeuronPrivateKey  | EVMAddress         | `EVMAddress()`           | [private_key.go:53-55](private_key.go#L53-L55)     |
-| NeuronPrivateKey  | PeerID             | `PeerID()`               | [private_key.go:70-76](private_key.go#L70-L76)     |
-| NeuronPrivateKey  | NeuronPublicKey    | `PublicKey()`            | [private_key.go:41-46](private_key.go#L41-L46)     |
-| NeuronPrivateKey  | Hedera PrivateKey  | `ToHederaPrivateKey()`   | [private_key.go:128-140](private_key.go#L128-L140) |
-| NeuronPrivateKey  | \*ecdsa.PrivateKey | `ToECDSA()`              | [private_key.go:116-121](private_key.go#L116-L121) |
-| Hedera PrivateKey | NeuronPrivateKey   | `PrivateKeyFromHedera()` | [factory.go:75-111](factory.go#L75-L111)           |
-| Hedera PublicKey  | NeuronPublicKey    | `PublicKeyFromHedera()`  | [factory.go:161-179](factory.go#L161-L179)         |
+| From              | To                 | Method                   | File:Line                                                    |
+| ----------------- | ------------------ | ------------------------ | ------------------------------------------------------------ |
+| NeuronPublicKey   | EVMAddress         | `EVMAddress()`           | [public_key.go:84-93](keylib/public_key.go#L84-L93)          |
+| NeuronPublicKey   | PeerID             | `PeerID()`               | [public_key.go:110-118](keylib/public_key.go#L110-L118)      |
+| NeuronPublicKey   | Hedera PublicKey   | `ToHederaPublicKey()`    | [public_key.go:143-156](keylib/public_key.go#L143-L156)      |
+| NeuronPublicKey   | \*ecdsa.PublicKey  | `ToECDSA()`              | [public_key.go:123-136](keylib/public_key.go#L123-L136)      |
+| NeuronPrivateKey  | EVMAddress         | `EVMAddress()`           | [private_key.go:53-55](keylib/private_key.go#L53-L55)        |
+| NeuronPrivateKey  | PeerID             | `PeerID()`               | [private_key.go:70-76](keylib/private_key.go#L70-L76)        |
+| NeuronPrivateKey  | NeuronPublicKey    | `PublicKey()`            | [private_key.go:41-46](keylib/private_key.go#L41-L46)        |
+| NeuronPrivateKey  | Hedera PrivateKey  | `ToHederaPrivateKey()`   | [private_key.go:128-140](keylib/private_key.go#L128-L140)    |
+| NeuronPrivateKey  | \*ecdsa.PrivateKey | `ToECDSA()`              | [private_key.go:116-121](keylib/private_key.go#L116-L121)    |
+| Hedera PrivateKey | NeuronPrivateKey   | `PrivateKeyFromHedera()` | [factory.go:75-111](keylib/factory.go#L75-L111)              |
+| Hedera PublicKey  | NeuronPublicKey    | `PublicKeyFromHedera()`  | [factory.go:161-179](keylib/factory.go#L161-L179)            |
 
 ### Safe Variants (QA/QC Enhancement)
 
@@ -129,7 +129,7 @@ For safety-critical operations, safe variants return errors instead of zero valu
 | `ToHederaPrivateKey()` | `ToHederaPrivateKeySafe()` | Returns error instead of empty key         |
 | `ToHederaPublicKey()`  | `ToHederaPublicKeySafe()`  | Returns error instead of empty key         |
 
-**Files**: [public_key.go:100-106](public_key.go#L100-L106), [private_key.go:60-66](private_key.go#L60-L66), [private_key.go:144-157](private_key.go#L144-L157), [public_key.go:160-173](public_key.go#L160-L173)
+**Files**: [public_key.go:100-106](keylib/public_key.go#L100-L106), [private_key.go:60-66](keylib/private_key.go#L60-L66), [private_key.go:144-157](keylib/private_key.go#L144-L157), [public_key.go:160-173](keylib/public_key.go#L160-L173)
 
 ---
 
@@ -143,7 +143,7 @@ For safety-critical operations, safe variants return errors instead of zero valu
 
 #### Validation Functions
 
-**File**: [validation.go](validation.go)
+**File**: [validation.go](keylib/validation.go)
 
 | Function                    | Purpose                                       |
 | --------------------------- | --------------------------------------------- |
@@ -157,7 +157,7 @@ For safety-critical operations, safe variants return errors instead of zero valu
 
 #### Error Handling
 
-**File**: [errors.go](errors.go)
+**File**: [errors.go](keylib/errors.go)
 
 Rich error types with context:
 
@@ -215,14 +215,14 @@ func (k NeuronPublicKey) Verify(msg []byte, sig Signature) bool
 
 ### Type Definitions
 
-| Type                  | Purpose                         | File                                 |
-| --------------------- | ------------------------------- | ------------------------------------ |
-| `NeuronPrivateKey`    | ECDSA secp256k1 private key     | [private_key.go](private_key.go)     |
-| `NeuronPublicKey`     | ECDSA secp256k1 public key      | [public_key.go](public_key.go)       |
-| `EVMAddress`          | 20-byte Ethereum address        | [evm_address.go](evm_address.go)     |
-| `PeerID`              | libp2p peer identifier          | [peer_id.go](peer_id.go)             |
-| `Signature`           | 65-byte ECDSA signature (R‖S‖V) | [signature.go](signature.go)         |
-| `EncryptedPrivateKey` | Encrypted key with metadata     | [encrypted_key.go](encrypted_key.go) |
+| Type                  | Purpose                         | File                                           |
+| --------------------- | ------------------------------- | ---------------------------------------------- |
+| `NeuronPrivateKey`    | ECDSA secp256k1 private key     | [private_key.go](keylib/private_key.go)        |
+| `NeuronPublicKey`     | ECDSA secp256k1 public key      | [public_key.go](keylib/public_key.go)          |
+| `EVMAddress`          | 20-byte Ethereum address        | [evm_address.go](keylib/evm_address.go)        |
+| `PeerID`              | libp2p peer identifier          | [peer_id.go](keylib/peer_id.go)                |
+| `Signature`           | 65-byte ECDSA signature (R‖S‖V) | [signature.go](keylib/signature.go)            |
+| `EncryptedPrivateKey` | Encrypted key with metadata     | [encrypted_key.go](keylib/encrypted_key.go)    |
 
 ---
 
@@ -230,31 +230,31 @@ func (k NeuronPublicKey) Verify(msg []byte, sig Signature) bool
 
 ### A. Elevation (Factory Methods)
 
-| Spec Requirement      | Implementation                                    | File:Line                                                                            |
-| --------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| From hex strings      | `ParsePrivateKeyHex()`, `ParsePublicKeyHex()`     | [factory.go:33-50](factory.go#L33-L50), [factory.go:121-138](factory.go#L121-L138)   |
-| From raw bytes        | `PrivateKeyFromBytes()`, `PublicKeyFromBytes()`   | [factory.go:54-66](factory.go#L54-L66), [factory.go:142-157](factory.go#L142-L157)   |
-| From Hedera SDK types | `PrivateKeyFromHedera()`, `PublicKeyFromHedera()` | [factory.go:75-111](factory.go#L75-L111), [factory.go:161-179](factory.go#L161-L179) |
+| Spec Requirement      | Implementation                                    | File:Line                                                                                          |
+| --------------------- | ------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| From hex strings      | `ParsePrivateKeyHex()`, `ParsePublicKeyHex()`     | [factory.go:33-50](keylib/factory.go#L33-L50), [factory.go:121-138](keylib/factory.go#L121-L138)   |
+| From raw bytes        | `PrivateKeyFromBytes()`, `PublicKeyFromBytes()`   | [factory.go:54-66](keylib/factory.go#L54-L66), [factory.go:142-157](keylib/factory.go#L142-L157)   |
+| From Hedera SDK types | `PrivateKeyFromHedera()`, `PublicKeyFromHedera()` | [factory.go:75-111](keylib/factory.go#L75-L111), [factory.go:161-179](keylib/factory.go#L161-L179) |
 
 ### B. Extraction (To External Types)
 
-| Spec Requirement  | Implementation                                        | File:Line                                                                                            |
-| ----------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| To Hedera types   | `ToHederaPrivateKey()`, `ToHederaPublicKey()`         | [private_key.go:128-140](private_key.go#L128-L140), [public_key.go:143-156](public_key.go#L143-L156) |
-| To standard ECDSA | `ToECDSA()`                                           | [private_key.go:116-121](private_key.go#L116-L121), [public_key.go:123-136](public_key.go#L123-L136) |
+| Spec Requirement  | Implementation                                        | File:Line                                                                                                              |
+| ----------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| To Hedera types   | `ToHederaPrivateKey()`, `ToHederaPublicKey()`         | [private_key.go:128-140](keylib/private_key.go#L128-L140), [public_key.go:143-156](keylib/public_key.go#L143-L156)     |
+| To standard ECDSA | `ToECDSA()`                                           | [private_key.go:116-121](keylib/private_key.go#L116-L121), [public_key.go:123-136](keylib/public_key.go#L123-L136)     |
 | To raw bytes      | `Bytes()`, `CompressedBytes()`, `UncompressedBytes()` | Various                                                                                              |
 | To hex string     | `Hex()`, `HexWithoutPrefix()`                         | Various                                                                                              |
 
 ### C. Generation
 
-| Spec Requirement         | Implementation                           | File:Line                              |
-| ------------------------ | ---------------------------------------- | -------------------------------------- |
-| Generate new private key | `GeneratePrivateKey()`                   | [factory.go:15-24](factory.go#L15-L24) |
+| Spec Requirement         | Implementation                           | File:Line                                        |
+| ------------------------ | ---------------------------------------- | ------------------------------------------------ |
+| Generate new private key | `GeneratePrivateKey()`                   | [factory.go:15-24](keylib/factory.go#L15-L24)    |
 | Default to ECDSA         | Uses `crypto/ecdsa` with secp256k1 curve | Done                                   |
 
 ### D. Restoration from Mnemonic
 
-**File**: [mnemonic.go](mnemonic.go)
+**File**: [mnemonic.go](keylib/mnemonic.go)
 
 | Spec Requirement      | Implementation                                                         |
 | --------------------- | ---------------------------------------------------------------------- |
@@ -269,7 +269,7 @@ Default derivation path: `m/44'/60'/0'/0/0` (Ethereum standard)
 
 ### E. Signer Interface
 
-**File**: [private_key.go:198-230](private_key.go#L198-L230)
+**File**: [private_key.go:198-230](keylib/private_key.go#L198-L230)
 
 ```go
 // NeuronPrivateKey implements crypto.Signer
@@ -281,7 +281,7 @@ func (k NeuronPrivateKey) Sign(rand io.Reader, digest []byte, opts crypto.Signer
 
 ### F. Key Safety (Scramble/Unscramble)
 
-**File**: [encrypted_key.go](encrypted_key.go)
+**File**: [encrypted_key.go](keylib/encrypted_key.go)
 
 | Spec Requirement    | Implementation                                   |
 | ------------------- | ------------------------------------------------ |
@@ -307,24 +307,24 @@ type EncryptedPrivateKey struct {
 
 ### G. Key Matching Verification
 
-| Spec Requirement                 | Implementation                          | File:Line                                          |
-| -------------------------------- | --------------------------------------- | -------------------------------------------------- |
-| `PrivateKey.Matches(PublicKey)`  | `MatchesPublicKey(pub NeuronPublicKey)` | [private_key.go:234-240](private_key.go#L234-L240) |
-| `PrivateKey.Matches(EVMAddress)` | `MatchesEVMAddress(addr EVMAddress)`    | [private_key.go:244-249](private_key.go#L244-L249) |
-| `PublicKey.Matches(PeerID)`      | `MatchesPeerID(pid PeerID)`             | [public_key.go:187-196](public_key.go#L187-L196)   |
-| `PublicKey.Matches(EVMAddress)`  | `MatchesEVMAddress(addr EVMAddress)`    | [public_key.go:177-183](public_key.go#L177-L183)   |
+| Spec Requirement                 | Implementation                          | File:Line                                                    |
+| -------------------------------- | --------------------------------------- | ------------------------------------------------------------ |
+| `PrivateKey.Matches(PublicKey)`  | `MatchesPublicKey(pub NeuronPublicKey)` | [private_key.go:234-240](keylib/private_key.go#L234-L240)    |
+| `PrivateKey.Matches(EVMAddress)` | `MatchesEVMAddress(addr EVMAddress)`    | [private_key.go:244-249](keylib/private_key.go#L244-L249)    |
+| `PublicKey.Matches(PeerID)`      | `MatchesPeerID(pid PeerID)`             | [public_key.go:187-196](keylib/public_key.go#L187-L196)      |
+| `PublicKey.Matches(EVMAddress)`  | `MatchesEVMAddress(addr EVMAddress)`    | [public_key.go:177-183](keylib/public_key.go#L177-L183)      |
 
 All matching functions use **constant-time comparison** to prevent timing attacks.
 
 ### H. Signing & Verification
 
-| Spec Requirement         | Implementation                                 | File:Line                                          |
-| ------------------------ | ---------------------------------------------- | -------------------------------------------------- |
-| Sign message             | `SignMessage(msg []byte)`                      | [private_key.go:162-172](private_key.go#L162-L172) |
-| Sign pre-hashed digest   | `SignDigest(digest [32]byte)`                  | [private_key.go:176-191](private_key.go#L176-L191) |
-| Verify signature         | `Verify(msg []byte, sig Signature)`            | [public_key.go:201-209](public_key.go#L201-L209)   |
-| Verify pre-hashed digest | `VerifyDigest(digest [32]byte, sig Signature)` | [public_key.go:213-231](public_key.go#L213-L231)   |
-| Recover public key       | `RecoverPublicKey(msg []byte, sig Signature)`  | [signature.go](signature.go)                       |
+| Spec Requirement         | Implementation                                 | File:Line                                                    |
+| ------------------------ | ---------------------------------------------- | ------------------------------------------------------------ |
+| Sign message             | `SignMessage(msg []byte)`                      | [private_key.go:162-172](keylib/private_key.go#L162-L172)    |
+| Sign pre-hashed digest   | `SignDigest(digest [32]byte)`                  | [private_key.go:176-191](keylib/private_key.go#L176-L191)    |
+| Verify signature         | `Verify(msg []byte, sig Signature)`            | [public_key.go:201-209](keylib/public_key.go#L201-L209)      |
+| Verify pre-hashed digest | `VerifyDigest(digest [32]byte, sig Signature)` | [public_key.go:213-231](keylib/public_key.go#L213-L231)      |
+| Recover public key       | `RecoverPublicKey(msg []byte, sig Signature)`  | [signature.go](keylib/signature.go)                          |
 
 **Signature Format**: 65 bytes (R‖S‖V) where V is recovery ID (0 or 1)
 
@@ -951,25 +951,25 @@ The following enhancements were added during QA/QC review:
 - `secureZero()` - Memory clearing
 - All `Matches*` and `Equal()` methods
 
-**File**: [constant_time.go](constant_time.go)
+**File**: [constant_time.go](keylib/constant_time.go)
 
 ---
 
 ## File Index
 
-| File                                 | Purpose                                   |
-| ------------------------------------ | ----------------------------------------- |
-| [private_key.go](private_key.go)     | `NeuronPrivateKey` type and methods       |
-| [public_key.go](public_key.go)       | `NeuronPublicKey` type and methods        |
-| [signature.go](signature.go)         | `Signature` type and recovery             |
-| [evm_address.go](evm_address.go)     | `EVMAddress` type with EIP-55             |
-| [peer_id.go](peer_id.go)             | `PeerID` wrapper for libp2p               |
-| [factory.go](factory.go)             | All Parse*/From*/Generate functions       |
-| [mnemonic.go](mnemonic.go)           | BIP39/BIP32 mnemonic support              |
-| [encrypted_key.go](encrypted_key.go) | Scramble/Unscramble with Argon2id+AES-GCM |
-| [errors.go](errors.go)               | `KeyError` type hierarchy                 |
-| [validation.go](validation.go)       | Internal validation helpers               |
-| [constant_time.go](constant_time.go) | Secure comparison utilities               |
+| File                                               | Purpose                                   |
+| -------------------------------------------------- | ----------------------------------------- |
+| [private_key.go](keylib/private_key.go)            | `NeuronPrivateKey` type and methods       |
+| [public_key.go](keylib/public_key.go)              | `NeuronPublicKey` type and methods        |
+| [signature.go](keylib/signature.go)                | `Signature` type and recovery             |
+| [evm_address.go](keylib/evm_address.go)            | `EVMAddress` type with EIP-55             |
+| [peer_id.go](keylib/peer_id.go)                    | `PeerID` wrapper for libp2p               |
+| [factory.go](keylib/factory.go)                    | All Parse*/From*/Generate functions       |
+| [mnemonic.go](keylib/mnemonic.go)                  | BIP39/BIP32 mnemonic support              |
+| [encrypted_key.go](keylib/encrypted_key.go)        | Scramble/Unscramble with Argon2id+AES-GCM |
+| [errors.go](keylib/errors.go)                      | `KeyError` type hierarchy                 |
+| [validation.go](keylib/validation.go)              | Internal validation helpers               |
+| [constant_time.go](keylib/constant_time.go)        | Secure comparison utilities               |
 
 ---
 
@@ -977,16 +977,16 @@ The following enhancements were added during QA/QC review:
 
 **Current Coverage**: 85.4%
 
-| Test File                                      | Tests              |
-| ---------------------------------------------- | ------------------ |
-| [private_key_test.go](private_key_test.go)     | 45+ tests          |
-| [public_key_test.go](public_key_test.go)       | 50+ tests          |
-| [factory_test.go](factory_test.go)             | 40+ tests          |
-| [signature_test.go](signature_test.go)         | 25+ tests          |
-| [mnemonic_test.go](mnemonic_test.go)           | 15+ tests          |
-| [encrypted_key_test.go](encrypted_key_test.go) | 15+ tests          |
-| [evm_address_test.go](evm_address_test.go)     | 20+ tests          |
-| [peer_id_test.go](peer_id_test.go)             | 15+ tests          |
-| [validation_test.go](validation_test.go)       | 25+ tests          |
-| [constant_time_test.go](constant_time_test.go) | 30+ tests          |
-| [integration_test.go](integration_test.go)     | Known test vectors |
+| Test File                                                    | Tests              |
+| ------------------------------------------------------------ | ------------------ |
+| [private_key_test.go](keylib/private_key_test.go)            | 45+ tests          |
+| [public_key_test.go](keylib/public_key_test.go)              | 50+ tests          |
+| [factory_test.go](keylib/factory_test.go)                    | 40+ tests          |
+| [signature_test.go](keylib/signature_test.go)                | 25+ tests          |
+| [mnemonic_test.go](keylib/mnemonic_test.go)                  | 15+ tests          |
+| [encrypted_key_test.go](keylib/encrypted_key_test.go)        | 15+ tests          |
+| [evm_address_test.go](keylib/evm_address_test.go)            | 20+ tests          |
+| [peer_id_test.go](keylib/peer_id_test.go)                    | 15+ tests          |
+| [validation_test.go](keylib/validation_test.go)              | 25+ tests          |
+| [constant_time_test.go](keylib/constant_time_test.go)        | 30+ tests          |
+| [integration_test.go](keylib/integration_test.go)            | Known test vectors |
