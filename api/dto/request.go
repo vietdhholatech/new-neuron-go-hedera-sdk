@@ -170,3 +170,36 @@ type ParseEVMAddressRequest struct {
 type ParsePeerIDRequest struct {
 	PeerID string `json:"peerID" binding:"required" example:"16Uiu2HAm3Lkn9NRieuh3UUTWMNthSDumQL9ctTBKxQqdCC79WUSq"`
 }
+
+// ===============================
+// Hedera Operations
+// ===============================
+
+// HederaPrivateKeyRequest is the request containing a Hedera DER-encoded private key string.
+type HederaPrivateKeyRequest struct {
+	HederaKeyString string `json:"hederaKeyString" binding:"required" example:"302e020100300506032b6570042204..."`
+}
+
+// HederaPublicKeyRequest is the request containing a Hedera DER-encoded public key string.
+type HederaPublicKeyRequest struct {
+	HederaKeyString string `json:"hederaKeyString" binding:"required" example:"302a300506032b6570032100..."`
+}
+
+// ===============================
+// Bytes Operations
+// ===============================
+
+// PrivateKeyFromBytesRequest is the request for constructing a private key from raw bytes.
+type PrivateKeyFromBytesRequest struct {
+	Bytes string `json:"bytes" binding:"required" example:"base64-encoded-32-bytes"`
+}
+
+// PublicKeyFromBytesRequest is the request for constructing a public key from raw bytes.
+type PublicKeyFromBytesRequest struct {
+	Bytes string `json:"bytes" binding:"required" example:"base64-encoded-33-or-65-bytes"`
+}
+
+// ExportBytesRequest is the request for exporting key bytes.
+type ExportBytesRequest struct {
+	PublicKeyHex string `json:"publicKeyHex" binding:"required" example:"0x02759b048e7ccf6ba68f9658105a4a139b5f9f5dfd451857c600cc28f33a1a99ae"`
+}

@@ -15,6 +15,126 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/bytes/export-public-key": {
+            "post": {
+                "description": "Export a public key in multiple formats (compressed/uncompressed, base64/hex)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bytes"
+                ],
+                "summary": "Export public key as raw bytes",
+                "parameters": [
+                    {
+                        "description": "Public key hex",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ExportBytesRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.KeyBytesResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/bytes/private-key-from-bytes": {
+            "post": {
+                "description": "Construct a private key from base64-encoded raw 32-byte value",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bytes"
+                ],
+                "summary": "Construct private key from raw bytes",
+                "parameters": [
+                    {
+                        "description": "Base64-encoded 32 bytes",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.PrivateKeyFromBytesRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.KeyPairResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/bytes/public-key-from-bytes": {
+            "post": {
+                "description": "Construct a public key from base64-encoded raw SEC1 bytes (33 compressed or 65 uncompressed)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bytes"
+                ],
+                "summary": "Construct public key from raw bytes",
+                "parameters": [
+                    {
+                        "description": "Base64-encoded 33 or 65 bytes",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.PublicKeyFromBytesRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.PublicKeyResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/derive/evm-address": {
             "post": {
                 "description": "Derive the Ethereum address from a public key hex string",
@@ -35,7 +155,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.DeriveFromPublicKeyRequest"
+                            "$ref": "#/definitions/dto.DeriveFromPublicKeyRequest"
                         }
                     }
                 ],
@@ -43,13 +163,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.EVMAddressResponse"
+                            "$ref": "#/definitions/dto.EVMAddressResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -75,7 +195,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.DeriveFromPublicKeyRequest"
+                            "$ref": "#/definitions/dto.DeriveFromPublicKeyRequest"
                         }
                     }
                 ],
@@ -83,13 +203,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.EVMAddressResponse"
+                            "$ref": "#/definitions/dto.EVMAddressResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -115,7 +235,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.DeriveFromPublicKeyRequest"
+                            "$ref": "#/definitions/dto.DeriveFromPublicKeyRequest"
                         }
                     }
                 ],
@@ -123,13 +243,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.PeerIDResponse"
+                            "$ref": "#/definitions/dto.PeerIDResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -155,7 +275,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.DeriveFromPrivateKeyRequest"
+                            "$ref": "#/definitions/dto.DeriveFromPrivateKeyRequest"
                         }
                     }
                 ],
@@ -163,13 +283,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.PublicKeyResponse"
+                            "$ref": "#/definitions/dto.PublicKeyResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -195,7 +315,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ScrambleRequest"
+                            "$ref": "#/definitions/dto.ScrambleRequest"
                         }
                     }
                 ],
@@ -203,13 +323,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ScrambleResponse"
+                            "$ref": "#/definitions/dto.ScrambleResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -235,7 +355,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.UnscrambleRequest"
+                            "$ref": "#/definitions/dto.UnscrambleRequest"
                         }
                     }
                 ],
@@ -243,13 +363,253 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.KeyPairResponse"
+                            "$ref": "#/definitions/dto.KeyPairResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/hedera/detect-key-type": {
+            "post": {
+                "description": "Detect if a Hedera private key is Ed25519 or ECDSA secp256k1",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "hedera"
+                ],
+                "summary": "Detect Hedera private key type",
+                "parameters": [
+                    {
+                        "description": "Hedera DER-encoded key string",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.HederaPrivateKeyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.KeyTypeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/hedera/detect-public-key-type": {
+            "post": {
+                "description": "Detect if a Hedera public key is Ed25519 or ECDSA secp256k1",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "hedera"
+                ],
+                "summary": "Detect Hedera public key type",
+                "parameters": [
+                    {
+                        "description": "Hedera DER-encoded key string",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.HederaPublicKeyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.KeyTypeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/hedera/from-private-key": {
+            "post": {
+                "description": "Convert a Hedera SDK DER-encoded private key string to Neuron format. Rejects Ed25519 keys.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "hedera"
+                ],
+                "summary": "Elevate Hedera private key to Neuron format",
+                "parameters": [
+                    {
+                        "description": "Hedera DER-encoded key string",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.HederaPrivateKeyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.KeyPairResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/hedera/from-public-key": {
+            "post": {
+                "description": "Convert a Hedera SDK DER-encoded public key string to Neuron format. Rejects Ed25519 keys.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "hedera"
+                ],
+                "summary": "Elevate Hedera public key to Neuron format",
+                "parameters": [
+                    {
+                        "description": "Hedera DER-encoded key string",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.HederaPublicKeyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.PublicKeyResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/hedera/to-private-key": {
+            "post": {
+                "description": "Convert a Neuron private key (hex) to Hedera SDK DER-encoded string format",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "hedera"
+                ],
+                "summary": "Convert Neuron private key to Hedera format",
+                "parameters": [
+                    {
+                        "description": "Private key hex",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.DeriveFromPrivateKeyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.HederaKeyResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/hedera/to-public-key": {
+            "post": {
+                "description": "Convert a Neuron public key (hex) to Hedera SDK DER-encoded string format",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "hedera"
+                ],
+                "summary": "Convert Neuron public key to Hedera format",
+                "parameters": [
+                    {
+                        "description": "Public key hex",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.DeriveFromPublicKeyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.HederaKeyResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -275,7 +635,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ParseEVMAddressRequest"
+                            "$ref": "#/definitions/dto.ParseEVMAddressRequest"
                         }
                     }
                 ],
@@ -283,13 +643,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.EVMAddressResponse"
+                            "$ref": "#/definitions/dto.EVMAddressResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -315,7 +675,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ParseEVMAddressRequest"
+                            "$ref": "#/definitions/dto.ParseEVMAddressRequest"
                         }
                     }
                 ],
@@ -323,13 +683,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.EVMAddressResponse"
+                            "$ref": "#/definitions/dto.EVMAddressResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -355,7 +715,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ParsePeerIDRequest"
+                            "$ref": "#/definitions/dto.ParsePeerIDRequest"
                         }
                     }
                 ],
@@ -363,13 +723,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.PeerIDResponse"
+                            "$ref": "#/definitions/dto.PeerIDResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -392,13 +752,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.KeyPairResponse"
+                            "$ref": "#/definitions/dto.KeyPairResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -424,7 +784,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ParsePrivateKeyRequest"
+                            "$ref": "#/definitions/dto.ParsePrivateKeyRequest"
                         }
                     }
                 ],
@@ -432,13 +792,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.KeyPairResponse"
+                            "$ref": "#/definitions/dto.KeyPairResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -464,7 +824,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ParsePublicKeyRequest"
+                            "$ref": "#/definitions/dto.ParsePublicKeyRequest"
                         }
                     }
                 ],
@@ -472,13 +832,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.PublicKeyResponse"
+                            "$ref": "#/definitions/dto.PublicKeyResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -504,7 +864,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchPrivateEVMRequest"
+                            "$ref": "#/definitions/dto.MatchPrivateEVMRequest"
                         }
                     }
                 ],
@@ -512,13 +872,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchResponse"
+                            "$ref": "#/definitions/dto.MatchResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -544,7 +904,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchPrivatePublicRequest"
+                            "$ref": "#/definitions/dto.MatchPrivatePublicRequest"
                         }
                     }
                 ],
@@ -552,13 +912,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchResponse"
+                            "$ref": "#/definitions/dto.MatchResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -584,7 +944,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchPublicEVMRequest"
+                            "$ref": "#/definitions/dto.MatchPublicEVMRequest"
                         }
                     }
                 ],
@@ -592,13 +952,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchResponse"
+                            "$ref": "#/definitions/dto.MatchResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -624,7 +984,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchPublicPeerIDRequest"
+                            "$ref": "#/definitions/dto.MatchPublicPeerIDRequest"
                         }
                     }
                 ],
@@ -632,13 +992,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchResponse"
+                            "$ref": "#/definitions/dto.MatchResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -664,7 +1024,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.DeriveFromMnemonicRequest"
+                            "$ref": "#/definitions/dto.DeriveFromMnemonicRequest"
                         }
                     }
                 ],
@@ -672,13 +1032,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.KeyPairResponse"
+                            "$ref": "#/definitions/dto.KeyPairResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -704,7 +1064,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.DeriveFromMnemonicFullRequest"
+                            "$ref": "#/definitions/dto.DeriveFromMnemonicFullRequest"
                         }
                     }
                 ],
@@ -712,13 +1072,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.KeyPairResponse"
+                            "$ref": "#/definitions/dto.KeyPairResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -744,7 +1104,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.GenerateMnemonicRequest"
+                            "$ref": "#/definitions/dto.GenerateMnemonicRequest"
                         }
                     }
                 ],
@@ -752,13 +1112,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MnemonicResponse"
+                            "$ref": "#/definitions/dto.MnemonicResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -784,7 +1144,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ValidateMnemonicRequest"
+                            "$ref": "#/definitions/dto.ValidateMnemonicRequest"
                         }
                     }
                 ],
@@ -792,13 +1152,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ValidateResponse"
+                            "$ref": "#/definitions/dto.ValidateResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -824,7 +1184,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ParseSignatureRequest"
+                            "$ref": "#/definitions/dto.ParseSignatureRequest"
                         }
                     }
                 ],
@@ -832,13 +1192,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.SignatureComponentsResponse"
+                            "$ref": "#/definitions/dto.SignatureComponentsResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -864,7 +1224,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ParseSignatureRequest"
+                            "$ref": "#/definitions/dto.ParseSignatureRequest"
                         }
                     }
                 ],
@@ -872,13 +1232,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.SignatureComponentsResponse"
+                            "$ref": "#/definitions/dto.SignatureComponentsResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -904,7 +1264,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.RecoverFromDigestRequest"
+                            "$ref": "#/definitions/dto.RecoverFromDigestRequest"
                         }
                     }
                 ],
@@ -912,13 +1272,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.PublicKeyResponse"
+                            "$ref": "#/definitions/dto.PublicKeyResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -944,7 +1304,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.RecoverPublicKeyRequest"
+                            "$ref": "#/definitions/dto.RecoverPublicKeyRequest"
                         }
                     }
                 ],
@@ -952,13 +1312,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.PublicKeyResponse"
+                            "$ref": "#/definitions/dto.PublicKeyResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -984,7 +1344,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.SignDigestRequest"
+                            "$ref": "#/definitions/dto.SignDigestRequest"
                         }
                     }
                 ],
@@ -992,13 +1352,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.SignatureResponse"
+                            "$ref": "#/definitions/dto.SignatureResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -1024,7 +1384,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.SignMessageRequest"
+                            "$ref": "#/definitions/dto.SignMessageRequest"
                         }
                     }
                 ],
@@ -1032,13 +1392,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.SignatureResponse"
+                            "$ref": "#/definitions/dto.SignatureResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -1064,7 +1424,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.VerifyDigestRequest"
+                            "$ref": "#/definitions/dto.VerifyDigestRequest"
                         }
                     }
                 ],
@@ -1072,13 +1432,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.VerifyResponse"
+                            "$ref": "#/definitions/dto.VerifyResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -1104,7 +1464,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.VerifyMessageRequest"
+                            "$ref": "#/definitions/dto.VerifyMessageRequest"
                         }
                     }
                 ],
@@ -1112,13 +1472,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.VerifyResponse"
+                            "$ref": "#/definitions/dto.VerifyResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -1126,7 +1486,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.DeriveFromMnemonicFullRequest": {
+        "dto.DeriveFromMnemonicFullRequest": {
             "type": "object",
             "required": [
                 "mnemonic"
@@ -1146,7 +1506,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.DeriveFromMnemonicRequest": {
+        "dto.DeriveFromMnemonicRequest": {
             "type": "object",
             "required": [
                 "mnemonic"
@@ -1158,7 +1518,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.DeriveFromPrivateKeyRequest": {
+        "dto.DeriveFromPrivateKeyRequest": {
             "type": "object",
             "required": [
                 "privateKeyHex"
@@ -1170,7 +1530,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.DeriveFromPublicKeyRequest": {
+        "dto.DeriveFromPublicKeyRequest": {
             "type": "object",
             "required": [
                 "publicKeyHex"
@@ -1182,7 +1542,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.EVMAddressResponse": {
+        "dto.EVMAddressResponse": {
             "type": "object",
             "properties": {
                 "address": {
@@ -1199,7 +1559,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.EncryptedKeyDTO": {
+        "dto.EncryptedKeyDTO": {
             "type": "object",
             "properties": {
                 "ciphertext": {
@@ -1220,7 +1580,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse": {
+        "dto.ErrorResponse": {
             "type": "object",
             "properties": {
                 "error": {
@@ -1229,7 +1589,19 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.GenerateMnemonicRequest": {
+        "dto.ExportBytesRequest": {
+            "type": "object",
+            "required": [
+                "publicKeyHex"
+            ],
+            "properties": {
+                "publicKeyHex": {
+                    "type": "string",
+                    "example": "0x02759b048e7ccf6ba68f9658105a4a139b5f9f5dfd451857c600cc28f33a1a99ae"
+                }
+            }
+        },
+        "dto.GenerateMnemonicRequest": {
             "type": "object",
             "required": [
                 "wordCount"
@@ -1248,7 +1620,65 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.KeyPairResponse": {
+        "dto.HederaKeyResponse": {
+            "type": "object",
+            "properties": {
+                "hederaKeyString": {
+                    "type": "string",
+                    "example": "302e020100300506032b6570042204..."
+                },
+                "keyType": {
+                    "type": "string",
+                    "example": "ECDSA_SECP256K1"
+                }
+            }
+        },
+        "dto.HederaPrivateKeyRequest": {
+            "type": "object",
+            "required": [
+                "hederaKeyString"
+            ],
+            "properties": {
+                "hederaKeyString": {
+                    "type": "string",
+                    "example": "302e020100300506032b6570042204..."
+                }
+            }
+        },
+        "dto.HederaPublicKeyRequest": {
+            "type": "object",
+            "required": [
+                "hederaKeyString"
+            ],
+            "properties": {
+                "hederaKeyString": {
+                    "type": "string",
+                    "example": "302a300506032b6570032100..."
+                }
+            }
+        },
+        "dto.KeyBytesResponse": {
+            "type": "object",
+            "properties": {
+                "compressedBase64": {
+                    "type": "string",
+                    "example": "base64..."
+                },
+                "compressedHex": {
+                    "type": "string",
+                    "example": "0x02..."
+                },
+                "uncompressedBase64": {
+                    "type": "string",
+                    "example": "base64..."
+                },
+                "uncompressedHex": {
+                    "type": "string",
+                    "example": "0x04..."
+                }
+            }
+        },
+        "dto.KeyPairResponse": {
             "type": "object",
             "properties": {
                 "evmAddress": {
@@ -1277,7 +1707,28 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchPrivateEVMRequest": {
+        "dto.KeyTypeResponse": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "ECDSA secp256k1 key compatible with Ethereum"
+                },
+                "isECDSA": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "isEd25519": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "keyType": {
+                    "type": "string",
+                    "example": "ECDSA_SECP256K1"
+                }
+            }
+        },
+        "dto.MatchPrivateEVMRequest": {
             "type": "object",
             "required": [
                 "evmAddress",
@@ -1294,7 +1745,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchPrivatePublicRequest": {
+        "dto.MatchPrivatePublicRequest": {
             "type": "object",
             "required": [
                 "privateKeyHex",
@@ -1311,7 +1762,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchPublicEVMRequest": {
+        "dto.MatchPublicEVMRequest": {
             "type": "object",
             "required": [
                 "evmAddress",
@@ -1328,7 +1779,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchPublicPeerIDRequest": {
+        "dto.MatchPublicPeerIDRequest": {
             "type": "object",
             "required": [
                 "peerID",
@@ -1345,7 +1796,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchResponse": {
+        "dto.MatchResponse": {
             "type": "object",
             "properties": {
                 "matches": {
@@ -1354,7 +1805,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MnemonicResponse": {
+        "dto.MnemonicResponse": {
             "type": "object",
             "properties": {
                 "mnemonic": {
@@ -1367,7 +1818,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ParseEVMAddressRequest": {
+        "dto.ParseEVMAddressRequest": {
             "type": "object",
             "required": [
                 "address"
@@ -1379,7 +1830,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ParsePeerIDRequest": {
+        "dto.ParsePeerIDRequest": {
             "type": "object",
             "required": [
                 "peerID"
@@ -1391,7 +1842,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ParsePrivateKeyRequest": {
+        "dto.ParsePrivateKeyRequest": {
             "type": "object",
             "required": [
                 "hex"
@@ -1403,7 +1854,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ParsePublicKeyRequest": {
+        "dto.ParsePublicKeyRequest": {
             "type": "object",
             "required": [
                 "hex"
@@ -1415,7 +1866,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ParseSignatureRequest": {
+        "dto.ParseSignatureRequest": {
             "type": "object",
             "required": [
                 "signatureHex"
@@ -1427,7 +1878,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.PeerIDResponse": {
+        "dto.PeerIDResponse": {
             "type": "object",
             "properties": {
                 "peerID": {
@@ -1436,7 +1887,31 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.PublicKeyResponse": {
+        "dto.PrivateKeyFromBytesRequest": {
+            "type": "object",
+            "required": [
+                "bytes"
+            ],
+            "properties": {
+                "bytes": {
+                    "type": "string",
+                    "example": "base64-encoded-32-bytes"
+                }
+            }
+        },
+        "dto.PublicKeyFromBytesRequest": {
+            "type": "object",
+            "required": [
+                "bytes"
+            ],
+            "properties": {
+                "bytes": {
+                    "type": "string",
+                    "example": "base64-encoded-33-or-65-bytes"
+                }
+            }
+        },
+        "dto.PublicKeyResponse": {
             "type": "object",
             "properties": {
                 "evmAddress": {
@@ -1461,7 +1936,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.RecoverFromDigestRequest": {
+        "dto.RecoverFromDigestRequest": {
             "type": "object",
             "required": [
                 "digestHex",
@@ -1478,7 +1953,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.RecoverPublicKeyRequest": {
+        "dto.RecoverPublicKeyRequest": {
             "type": "object",
             "required": [
                 "message",
@@ -1495,7 +1970,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ScrambleRequest": {
+        "dto.ScrambleRequest": {
             "type": "object",
             "required": [
                 "password",
@@ -1513,15 +1988,15 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ScrambleResponse": {
+        "dto.ScrambleResponse": {
             "type": "object",
             "properties": {
                 "encrypted": {
-                    "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.EncryptedKeyDTO"
+                    "$ref": "#/definitions/dto.EncryptedKeyDTO"
                 }
             }
         },
-        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.SignDigestRequest": {
+        "dto.SignDigestRequest": {
             "type": "object",
             "required": [
                 "digestHex",
@@ -1538,7 +2013,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.SignMessageRequest": {
+        "dto.SignMessageRequest": {
             "type": "object",
             "required": [
                 "message",
@@ -1555,7 +2030,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.SignatureComponentsResponse": {
+        "dto.SignatureComponentsResponse": {
             "type": "object",
             "properties": {
                 "isZero": {
@@ -1580,7 +2055,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.SignatureResponse": {
+        "dto.SignatureResponse": {
             "type": "object",
             "properties": {
                 "r": {
@@ -1609,7 +2084,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.UnscrambleRequest": {
+        "dto.UnscrambleRequest": {
             "type": "object",
             "required": [
                 "encrypted",
@@ -1617,7 +2092,7 @@ const docTemplate = `{
             ],
             "properties": {
                 "encrypted": {
-                    "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.EncryptedKeyDTO"
+                    "$ref": "#/definitions/dto.EncryptedKeyDTO"
                 },
                 "password": {
                     "type": "string",
@@ -1625,7 +2100,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ValidateMnemonicRequest": {
+        "dto.ValidateMnemonicRequest": {
             "type": "object",
             "required": [
                 "mnemonic"
@@ -1637,7 +2112,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ValidateResponse": {
+        "dto.ValidateResponse": {
             "type": "object",
             "properties": {
                 "error": {
@@ -1650,7 +2125,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.VerifyDigestRequest": {
+        "dto.VerifyDigestRequest": {
             "type": "object",
             "required": [
                 "digestHex",
@@ -1672,7 +2147,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.VerifyMessageRequest": {
+        "dto.VerifyMessageRequest": {
             "type": "object",
             "required": [
                 "message",
@@ -1694,7 +2169,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.VerifyResponse": {
+        "dto.VerifyResponse": {
             "type": "object",
             "properties": {
                 "valid": {

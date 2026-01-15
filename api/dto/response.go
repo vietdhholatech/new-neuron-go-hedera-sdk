@@ -109,3 +109,33 @@ type ScrambleResponse struct {
 type MatchResponse struct {
 	Matches bool `json:"matches" example:"true"`
 }
+
+// ===============================
+// Hedera Responses
+// ===============================
+
+// HederaKeyResponse is the response containing Hedera SDK key representations.
+type HederaKeyResponse struct {
+	HederaKeyString string `json:"hederaKeyString" example:"302e020100300506032b6570042204..."`
+	KeyType         string `json:"keyType" example:"ECDSA_SECP256K1"`
+}
+
+// KeyTypeResponse is the response for key type detection.
+type KeyTypeResponse struct {
+	KeyType     string `json:"keyType" example:"ECDSA_SECP256K1"`
+	IsEd25519   bool   `json:"isEd25519" example:"false"`
+	IsECDSA     bool   `json:"isECDSA" example:"true"`
+	Description string `json:"description" example:"ECDSA secp256k1 key compatible with Ethereum"`
+}
+
+// ===============================
+// Bytes Responses
+// ===============================
+
+// KeyBytesResponse is the response containing raw key bytes in multiple formats.
+type KeyBytesResponse struct {
+	CompressedBase64   string `json:"compressedBase64" example:"base64..."`
+	UncompressedBase64 string `json:"uncompressedBase64" example:"base64..."`
+	CompressedHex      string `json:"compressedHex" example:"0x02..."`
+	UncompressedHex    string `json:"uncompressedHex" example:"0x04..."`
+}

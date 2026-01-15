@@ -101,6 +101,25 @@ func NewServer() *Server {
 			identifiers.POST("/parse-peer-id", handlers.ParsePeerID)
 			identifiers.POST("/evm-checksum", handlers.EVMChecksum)
 		}
+
+		// Hedera SDK Interoperability (HIGH PRIORITY)
+		hedera := v1.Group("/hedera")
+		{
+			hedera.POST("/to-private-key", handlers.ToHederaPrivateKey)
+			hedera.POST("/to-public-key", handlers.ToHederaPublicKey)
+			hedera.POST("/from-private-key", handlers.FromHederaPrivateKey)
+			hedera.POST("/from-public-key", handlers.FromHederaPublicKey)
+			hedera.POST("/detect-key-type", handlers.DetectKeyType)
+			hedera.POST("/detect-public-key-type", handlers.DetectPublicKeyType)
+		}
+
+		// Raw Bytes Operations (MEDIUM PRIORITY)
+		bytesGroup := v1.Group("/bytes")
+		{
+			bytesGroup.POST("/private-key-from-bytes", handlers.PrivateKeyFromBytes)
+			bytesGroup.POST("/public-key-from-bytes", handlers.PublicKeyFromBytes)
+			bytesGroup.POST("/export-public-key", handlers.ExportPublicKeyBytes)
+		}
 	}
 
 	return &Server{router: router}

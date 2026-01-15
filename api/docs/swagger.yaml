@@ -1,6 +1,6 @@
 basePath: /api/v1
 definitions:
-  github_com_aspect-build_neuron-go-hedera-sdk_api_dto.DeriveFromMnemonicFullRequest:
+  dto.DeriveFromMnemonicFullRequest:
     properties:
       mnemonic:
         example: abandon abandon abandon abandon abandon abandon abandon abandon abandon
@@ -15,7 +15,7 @@ definitions:
     required:
     - mnemonic
     type: object
-  github_com_aspect-build_neuron-go-hedera-sdk_api_dto.DeriveFromMnemonicRequest:
+  dto.DeriveFromMnemonicRequest:
     properties:
       mnemonic:
         example: abandon abandon abandon abandon abandon abandon abandon abandon abandon
@@ -24,7 +24,7 @@ definitions:
     required:
     - mnemonic
     type: object
-  github_com_aspect-build_neuron-go-hedera-sdk_api_dto.DeriveFromPrivateKeyRequest:
+  dto.DeriveFromPrivateKeyRequest:
     properties:
       privateKeyHex:
         example: 0x1234567890abcdef...
@@ -32,7 +32,7 @@ definitions:
     required:
     - privateKeyHex
     type: object
-  github_com_aspect-build_neuron-go-hedera-sdk_api_dto.DeriveFromPublicKeyRequest:
+  dto.DeriveFromPublicKeyRequest:
     properties:
       publicKeyHex:
         example: 0x02759b048e7ccf6ba68f9658105a4a139b5f9f5dfd451857c600cc28f33a1a99ae
@@ -40,7 +40,7 @@ definitions:
     required:
     - publicKeyHex
     type: object
-  github_com_aspect-build_neuron-go-hedera-sdk_api_dto.EVMAddressResponse:
+  dto.EVMAddressResponse:
     properties:
       address:
         example: 0xe364f2f1e5f4f03d1df682322500b9c68c997ec3
@@ -52,7 +52,7 @@ definitions:
         example: false
         type: boolean
     type: object
-  github_com_aspect-build_neuron-go-hedera-sdk_api_dto.EncryptedKeyDTO:
+  dto.EncryptedKeyDTO:
     properties:
       ciphertext:
         example: base64...
@@ -67,13 +67,21 @@ definitions:
         example: 1
         type: integer
     type: object
-  github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse:
+  dto.ErrorResponse:
     properties:
       error:
         example: invalid hex format
         type: string
     type: object
-  github_com_aspect-build_neuron-go-hedera-sdk_api_dto.GenerateMnemonicRequest:
+  dto.ExportBytesRequest:
+    properties:
+      publicKeyHex:
+        example: 0x02759b048e7ccf6ba68f9658105a4a139b5f9f5dfd451857c600cc28f33a1a99ae
+        type: string
+    required:
+    - publicKeyHex
+    type: object
+  dto.GenerateMnemonicRequest:
     properties:
       wordCount:
         enum:
@@ -87,7 +95,47 @@ definitions:
     required:
     - wordCount
     type: object
-  github_com_aspect-build_neuron-go-hedera-sdk_api_dto.KeyPairResponse:
+  dto.HederaKeyResponse:
+    properties:
+      hederaKeyString:
+        example: 302e020100300506032b6570042204...
+        type: string
+      keyType:
+        example: ECDSA_SECP256K1
+        type: string
+    type: object
+  dto.HederaPrivateKeyRequest:
+    properties:
+      hederaKeyString:
+        example: 302e020100300506032b6570042204...
+        type: string
+    required:
+    - hederaKeyString
+    type: object
+  dto.HederaPublicKeyRequest:
+    properties:
+      hederaKeyString:
+        example: 302a300506032b6570032100...
+        type: string
+    required:
+    - hederaKeyString
+    type: object
+  dto.KeyBytesResponse:
+    properties:
+      compressedBase64:
+        example: base64...
+        type: string
+      compressedHex:
+        example: 0x02...
+        type: string
+      uncompressedBase64:
+        example: base64...
+        type: string
+      uncompressedHex:
+        example: 0x04...
+        type: string
+    type: object
+  dto.KeyPairResponse:
     properties:
       evmAddress:
         example: 0xe364f2f1e5f4f03d1df682322500b9c68c997ec3
@@ -108,7 +156,22 @@ definitions:
         example: 0x04759b048e7ccf6ba68f9658105a4a139b5f9f5dfd451857c600cc28f33a1a99ae...
         type: string
     type: object
-  github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchPrivateEVMRequest:
+  dto.KeyTypeResponse:
+    properties:
+      description:
+        example: ECDSA secp256k1 key compatible with Ethereum
+        type: string
+      isECDSA:
+        example: true
+        type: boolean
+      isEd25519:
+        example: false
+        type: boolean
+      keyType:
+        example: ECDSA_SECP256K1
+        type: string
+    type: object
+  dto.MatchPrivateEVMRequest:
     properties:
       evmAddress:
         example: 0xe364f2f1e5F4F03d1df682322500b9c68C997ec3
@@ -120,7 +183,7 @@ definitions:
     - evmAddress
     - privateKeyHex
     type: object
-  github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchPrivatePublicRequest:
+  dto.MatchPrivatePublicRequest:
     properties:
       privateKeyHex:
         example: 0x1234567890abcdef...
@@ -132,7 +195,7 @@ definitions:
     - privateKeyHex
     - publicKeyHex
     type: object
-  github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchPublicEVMRequest:
+  dto.MatchPublicEVMRequest:
     properties:
       evmAddress:
         example: 0xe364f2f1e5F4F03d1df682322500b9c68C997ec3
@@ -144,7 +207,7 @@ definitions:
     - evmAddress
     - publicKeyHex
     type: object
-  github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchPublicPeerIDRequest:
+  dto.MatchPublicPeerIDRequest:
     properties:
       peerID:
         example: 16Uiu2HAm3Lkn9NRieuh3UUTWMNthSDumQL9ctTBKxQqdCC79WUSq
@@ -156,13 +219,13 @@ definitions:
     - peerID
     - publicKeyHex
     type: object
-  github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchResponse:
+  dto.MatchResponse:
     properties:
       matches:
         example: true
         type: boolean
     type: object
-  github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MnemonicResponse:
+  dto.MnemonicResponse:
     properties:
       mnemonic:
         example: abandon abandon abandon abandon abandon abandon abandon abandon abandon
@@ -172,7 +235,7 @@ definitions:
         example: 12
         type: integer
     type: object
-  github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ParseEVMAddressRequest:
+  dto.ParseEVMAddressRequest:
     properties:
       address:
         example: 0xe364f2f1e5F4F03d1df682322500b9c68C997ec3
@@ -180,7 +243,7 @@ definitions:
     required:
     - address
     type: object
-  github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ParsePeerIDRequest:
+  dto.ParsePeerIDRequest:
     properties:
       peerID:
         example: 16Uiu2HAm3Lkn9NRieuh3UUTWMNthSDumQL9ctTBKxQqdCC79WUSq
@@ -188,7 +251,7 @@ definitions:
     required:
     - peerID
     type: object
-  github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ParsePrivateKeyRequest:
+  dto.ParsePrivateKeyRequest:
     properties:
       hex:
         example: 0x1234567890abcdef...
@@ -196,7 +259,7 @@ definitions:
     required:
     - hex
     type: object
-  github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ParsePublicKeyRequest:
+  dto.ParsePublicKeyRequest:
     properties:
       hex:
         example: 0x02759b048e7ccf6ba68f9658105a4a139b5f9f5dfd451857c600cc28f33a1a99ae
@@ -204,7 +267,7 @@ definitions:
     required:
     - hex
     type: object
-  github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ParseSignatureRequest:
+  dto.ParseSignatureRequest:
     properties:
       signatureHex:
         example: 0x...65bytes...
@@ -212,13 +275,29 @@ definitions:
     required:
     - signatureHex
     type: object
-  github_com_aspect-build_neuron-go-hedera-sdk_api_dto.PeerIDResponse:
+  dto.PeerIDResponse:
     properties:
       peerID:
         example: 16Uiu2HAm3Lkn9NRieuh3UUTWMNthSDumQL9ctTBKxQqdCC79WUSq
         type: string
     type: object
-  github_com_aspect-build_neuron-go-hedera-sdk_api_dto.PublicKeyResponse:
+  dto.PrivateKeyFromBytesRequest:
+    properties:
+      bytes:
+        example: base64-encoded-32-bytes
+        type: string
+    required:
+    - bytes
+    type: object
+  dto.PublicKeyFromBytesRequest:
+    properties:
+      bytes:
+        example: base64-encoded-33-or-65-bytes
+        type: string
+    required:
+    - bytes
+    type: object
+  dto.PublicKeyResponse:
     properties:
       evmAddress:
         example: 0xe364f2f1e5f4f03d1df682322500b9c68c997ec3
@@ -236,7 +315,7 @@ definitions:
         example: 0x04759b048e7ccf6ba68f9658105a4a139b5f9f5dfd451857c600cc28f33a1a99ae...
         type: string
     type: object
-  github_com_aspect-build_neuron-go-hedera-sdk_api_dto.RecoverFromDigestRequest:
+  dto.RecoverFromDigestRequest:
     properties:
       digestHex:
         example: 0x1234567890abcdef...32bytes...
@@ -248,7 +327,7 @@ definitions:
     - digestHex
     - signatureHex
     type: object
-  github_com_aspect-build_neuron-go-hedera-sdk_api_dto.RecoverPublicKeyRequest:
+  dto.RecoverPublicKeyRequest:
     properties:
       message:
         example: Hello, World!
@@ -260,7 +339,7 @@ definitions:
     - message
     - signatureHex
     type: object
-  github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ScrambleRequest:
+  dto.ScrambleRequest:
     properties:
       password:
         example: mypassword123
@@ -273,12 +352,12 @@ definitions:
     - password
     - privateKeyHex
     type: object
-  github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ScrambleResponse:
+  dto.ScrambleResponse:
     properties:
       encrypted:
-        $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.EncryptedKeyDTO'
+        $ref: '#/definitions/dto.EncryptedKeyDTO'
     type: object
-  github_com_aspect-build_neuron-go-hedera-sdk_api_dto.SignDigestRequest:
+  dto.SignDigestRequest:
     properties:
       digestHex:
         example: 0x1234567890abcdef...32bytes...
@@ -290,7 +369,7 @@ definitions:
     - digestHex
     - privateKeyHex
     type: object
-  github_com_aspect-build_neuron-go-hedera-sdk_api_dto.SignMessageRequest:
+  dto.SignMessageRequest:
     properties:
       message:
         example: Hello, World!
@@ -302,7 +381,7 @@ definitions:
     - message
     - privateKeyHex
     type: object
-  github_com_aspect-build_neuron-go-hedera-sdk_api_dto.SignatureComponentsResponse:
+  dto.SignatureComponentsResponse:
     properties:
       isZero:
         example: false
@@ -320,7 +399,7 @@ definitions:
         example: 27
         type: integer
     type: object
-  github_com_aspect-build_neuron-go-hedera-sdk_api_dto.SignatureResponse:
+  dto.SignatureResponse:
     properties:
       r:
         example: 0x...
@@ -341,10 +420,10 @@ definitions:
         example: 27
         type: integer
     type: object
-  github_com_aspect-build_neuron-go-hedera-sdk_api_dto.UnscrambleRequest:
+  dto.UnscrambleRequest:
     properties:
       encrypted:
-        $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.EncryptedKeyDTO'
+        $ref: '#/definitions/dto.EncryptedKeyDTO'
       password:
         example: mypassword123
         type: string
@@ -352,7 +431,7 @@ definitions:
     - encrypted
     - password
     type: object
-  github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ValidateMnemonicRequest:
+  dto.ValidateMnemonicRequest:
     properties:
       mnemonic:
         example: abandon abandon abandon abandon abandon abandon abandon abandon abandon
@@ -361,7 +440,7 @@ definitions:
     required:
     - mnemonic
     type: object
-  github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ValidateResponse:
+  dto.ValidateResponse:
     properties:
       error:
         example: ""
@@ -370,7 +449,7 @@ definitions:
         example: true
         type: boolean
     type: object
-  github_com_aspect-build_neuron-go-hedera-sdk_api_dto.VerifyDigestRequest:
+  dto.VerifyDigestRequest:
     properties:
       digestHex:
         example: 0x1234567890abcdef...32bytes...
@@ -386,7 +465,7 @@ definitions:
     - publicKeyHex
     - signatureHex
     type: object
-  github_com_aspect-build_neuron-go-hedera-sdk_api_dto.VerifyMessageRequest:
+  dto.VerifyMessageRequest:
     properties:
       message:
         example: Hello, World!
@@ -402,7 +481,7 @@ definitions:
     - publicKeyHex
     - signatureHex
     type: object
-  github_com_aspect-build_neuron-go-hedera-sdk_api_dto.VerifyResponse:
+  dto.VerifyResponse:
     properties:
       valid:
         example: true
@@ -415,6 +494,86 @@ info:
   title: Keylib API
   version: "1.0"
 paths:
+  /bytes/export-public-key:
+    post:
+      consumes:
+      - application/json
+      description: Export a public key in multiple formats (compressed/uncompressed,
+        base64/hex)
+      parameters:
+      - description: Public key hex
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ExportBytesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.KeyBytesResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Export public key as raw bytes
+      tags:
+      - bytes
+  /bytes/private-key-from-bytes:
+    post:
+      consumes:
+      - application/json
+      description: Construct a private key from base64-encoded raw 32-byte value
+      parameters:
+      - description: Base64-encoded 32 bytes
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.PrivateKeyFromBytesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.KeyPairResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Construct private key from raw bytes
+      tags:
+      - bytes
+  /bytes/public-key-from-bytes:
+    post:
+      consumes:
+      - application/json
+      description: Construct a public key from base64-encoded raw SEC1 bytes (33 compressed
+        or 65 uncompressed)
+      parameters:
+      - description: Base64-encoded 33 or 65 bytes
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.PublicKeyFromBytesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PublicKeyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Construct public key from raw bytes
+      tags:
+      - bytes
   /derive/evm-address:
     post:
       consumes:
@@ -426,18 +585,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.DeriveFromPublicKeyRequest'
+          $ref: '#/definitions/dto.DeriveFromPublicKeyRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.EVMAddressResponse'
+            $ref: '#/definitions/dto.EVMAddressResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Derive EVM address from public key
       tags:
       - derive
@@ -453,18 +612,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.DeriveFromPublicKeyRequest'
+          $ref: '#/definitions/dto.DeriveFromPublicKeyRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.EVMAddressResponse'
+            $ref: '#/definitions/dto.EVMAddressResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Derive EVM address with error checking
       tags:
       - derive
@@ -479,18 +638,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.DeriveFromPublicKeyRequest'
+          $ref: '#/definitions/dto.DeriveFromPublicKeyRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.PeerIDResponse'
+            $ref: '#/definitions/dto.PeerIDResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Derive libp2p peer ID from public key
       tags:
       - derive
@@ -505,18 +664,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.DeriveFromPrivateKeyRequest'
+          $ref: '#/definitions/dto.DeriveFromPrivateKeyRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.PublicKeyResponse'
+            $ref: '#/definitions/dto.PublicKeyResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Derive public key from private key
       tags:
       - derive
@@ -531,18 +690,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ScrambleRequest'
+          $ref: '#/definitions/dto.ScrambleRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ScrambleResponse'
+            $ref: '#/definitions/dto.ScrambleResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Encrypt a private key
       tags:
       - encryption
@@ -557,21 +716,181 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.UnscrambleRequest'
+          $ref: '#/definitions/dto.UnscrambleRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.KeyPairResponse'
+            $ref: '#/definitions/dto.KeyPairResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Decrypt a private key
       tags:
       - encryption
+  /hedera/detect-key-type:
+    post:
+      consumes:
+      - application/json
+      description: Detect if a Hedera private key is Ed25519 or ECDSA secp256k1
+      parameters:
+      - description: Hedera DER-encoded key string
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.HederaPrivateKeyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.KeyTypeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Detect Hedera private key type
+      tags:
+      - hedera
+  /hedera/detect-public-key-type:
+    post:
+      consumes:
+      - application/json
+      description: Detect if a Hedera public key is Ed25519 or ECDSA secp256k1
+      parameters:
+      - description: Hedera DER-encoded key string
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.HederaPublicKeyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.KeyTypeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Detect Hedera public key type
+      tags:
+      - hedera
+  /hedera/from-private-key:
+    post:
+      consumes:
+      - application/json
+      description: Convert a Hedera SDK DER-encoded private key string to Neuron format.
+        Rejects Ed25519 keys.
+      parameters:
+      - description: Hedera DER-encoded key string
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.HederaPrivateKeyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.KeyPairResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Elevate Hedera private key to Neuron format
+      tags:
+      - hedera
+  /hedera/from-public-key:
+    post:
+      consumes:
+      - application/json
+      description: Convert a Hedera SDK DER-encoded public key string to Neuron format.
+        Rejects Ed25519 keys.
+      parameters:
+      - description: Hedera DER-encoded key string
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.HederaPublicKeyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PublicKeyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Elevate Hedera public key to Neuron format
+      tags:
+      - hedera
+  /hedera/to-private-key:
+    post:
+      consumes:
+      - application/json
+      description: Convert a Neuron private key (hex) to Hedera SDK DER-encoded string
+        format
+      parameters:
+      - description: Private key hex
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.DeriveFromPrivateKeyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.HederaKeyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Convert Neuron private key to Hedera format
+      tags:
+      - hedera
+  /hedera/to-public-key:
+    post:
+      consumes:
+      - application/json
+      description: Convert a Neuron public key (hex) to Hedera SDK DER-encoded string
+        format
+      parameters:
+      - description: Public key hex
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.DeriveFromPublicKeyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.HederaKeyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Convert Neuron public key to Hedera format
+      tags:
+      - hedera
   /identifiers/evm-checksum:
     post:
       consumes:
@@ -583,18 +902,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ParseEVMAddressRequest'
+          $ref: '#/definitions/dto.ParseEVMAddressRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.EVMAddressResponse'
+            $ref: '#/definitions/dto.EVMAddressResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Get EIP-55 checksum address
       tags:
       - identifiers
@@ -609,18 +928,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ParseEVMAddressRequest'
+          $ref: '#/definitions/dto.ParseEVMAddressRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.EVMAddressResponse'
+            $ref: '#/definitions/dto.EVMAddressResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Parse an EVM address
       tags:
       - identifiers
@@ -635,18 +954,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ParsePeerIDRequest'
+          $ref: '#/definitions/dto.ParsePeerIDRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.PeerIDResponse'
+            $ref: '#/definitions/dto.PeerIDResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Parse a peer ID
       tags:
       - identifiers
@@ -662,11 +981,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.KeyPairResponse'
+            $ref: '#/definitions/dto.KeyPairResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Generate new keypair
       tags:
       - keys
@@ -681,18 +1000,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ParsePrivateKeyRequest'
+          $ref: '#/definitions/dto.ParsePrivateKeyRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.KeyPairResponse'
+            $ref: '#/definitions/dto.KeyPairResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Parse private key from hex
       tags:
       - keys
@@ -708,18 +1027,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ParsePublicKeyRequest'
+          $ref: '#/definitions/dto.ParsePublicKeyRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.PublicKeyResponse'
+            $ref: '#/definitions/dto.PublicKeyResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Parse public key from hex
       tags:
       - keys
@@ -734,18 +1053,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchPrivateEVMRequest'
+          $ref: '#/definitions/dto.MatchPrivateEVMRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchResponse'
+            $ref: '#/definitions/dto.MatchResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Check if private key matches EVM address
       tags:
       - matching
@@ -760,18 +1079,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchPrivatePublicRequest'
+          $ref: '#/definitions/dto.MatchPrivatePublicRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchResponse'
+            $ref: '#/definitions/dto.MatchResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Check if private key matches public key
       tags:
       - matching
@@ -786,18 +1105,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchPublicEVMRequest'
+          $ref: '#/definitions/dto.MatchPublicEVMRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchResponse'
+            $ref: '#/definitions/dto.MatchResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Check if public key matches EVM address
       tags:
       - matching
@@ -812,18 +1131,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchPublicPeerIDRequest'
+          $ref: '#/definitions/dto.MatchPublicPeerIDRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchResponse'
+            $ref: '#/definitions/dto.MatchResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Check if public key matches peer ID
       tags:
       - matching
@@ -838,18 +1157,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.DeriveFromMnemonicRequest'
+          $ref: '#/definitions/dto.DeriveFromMnemonicRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.KeyPairResponse'
+            $ref: '#/definitions/dto.KeyPairResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Derive key from mnemonic
       tags:
       - mnemonic
@@ -865,18 +1184,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.DeriveFromMnemonicFullRequest'
+          $ref: '#/definitions/dto.DeriveFromMnemonicFullRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.KeyPairResponse'
+            $ref: '#/definitions/dto.KeyPairResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Derive key with options
       tags:
       - mnemonic
@@ -891,18 +1210,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.GenerateMnemonicRequest'
+          $ref: '#/definitions/dto.GenerateMnemonicRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MnemonicResponse'
+            $ref: '#/definitions/dto.MnemonicResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Generate a new mnemonic
       tags:
       - mnemonic
@@ -917,18 +1236,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ValidateMnemonicRequest'
+          $ref: '#/definitions/dto.ValidateMnemonicRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ValidateResponse'
+            $ref: '#/definitions/dto.ValidateResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Validate a mnemonic
       tags:
       - mnemonic
@@ -943,18 +1262,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ParseSignatureRequest'
+          $ref: '#/definitions/dto.ParseSignatureRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.SignatureComponentsResponse'
+            $ref: '#/definitions/dto.SignatureComponentsResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Get signature components
       tags:
       - signatures
@@ -970,18 +1289,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ParseSignatureRequest'
+          $ref: '#/definitions/dto.ParseSignatureRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.SignatureComponentsResponse'
+            $ref: '#/definitions/dto.SignatureComponentsResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Parse a signature from hex
       tags:
       - signatures
@@ -996,18 +1315,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.RecoverFromDigestRequest'
+          $ref: '#/definitions/dto.RecoverFromDigestRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.PublicKeyResponse'
+            $ref: '#/definitions/dto.PublicKeyResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Recover public key from signed digest
       tags:
       - signatures
@@ -1022,18 +1341,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.RecoverPublicKeyRequest'
+          $ref: '#/definitions/dto.RecoverPublicKeyRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.PublicKeyResponse'
+            $ref: '#/definitions/dto.PublicKeyResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Recover public key from signed message
       tags:
       - signatures
@@ -1048,18 +1367,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.SignDigestRequest'
+          $ref: '#/definitions/dto.SignDigestRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.SignatureResponse'
+            $ref: '#/definitions/dto.SignatureResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Sign a pre-hashed digest
       tags:
       - signing
@@ -1074,18 +1393,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.SignMessageRequest'
+          $ref: '#/definitions/dto.SignMessageRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.SignatureResponse'
+            $ref: '#/definitions/dto.SignatureResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Sign a message
       tags:
       - signing
@@ -1100,18 +1419,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.VerifyDigestRequest'
+          $ref: '#/definitions/dto.VerifyDigestRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.VerifyResponse'
+            $ref: '#/definitions/dto.VerifyResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Verify a digest signature
       tags:
       - signing
@@ -1126,18 +1445,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.VerifyMessageRequest'
+          $ref: '#/definitions/dto.VerifyMessageRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.VerifyResponse'
+            $ref: '#/definitions/dto.VerifyResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Verify a message signature
       tags:
       - signing
