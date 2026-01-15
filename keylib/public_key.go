@@ -13,6 +13,11 @@ import (
 //
 // This type provides the unified interface for public key operations
 // across Hedera, Ethereum, and libp2p ecosystems.
+//
+// # Concurrency
+//
+// NeuronPublicKey is safe for concurrent use by multiple goroutines.
+// All methods are thread-safe and non-blocking.
 type NeuronPublicKey struct {
 	key *secp256k1.PublicKey // unexported, never nil after valid construction
 }

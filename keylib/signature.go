@@ -155,6 +155,11 @@ func (s Signature) Equal(other Signature) bool {
 
 // RecoverPublicKey recovers the public key from a signature and the original message.
 // The message is hashed with Keccak256 before recovery.
+//
+// # Concurrency
+//
+// This function is safe for concurrent use. No blocking I/O.
+// EC point recovery is CPU-bound but typically fast (<1ms).
 func RecoverPublicKey(msg []byte, sig Signature) (NeuronPublicKey, error) {
 	const op = "RecoverPublicKey"
 

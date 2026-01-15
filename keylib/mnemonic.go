@@ -19,6 +19,11 @@ var ValidMnemonicWordCounts = []int{12, 15, 18, 21, 24}
 
 // GenerateMnemonic generates a new BIP39 mnemonic phrase.
 // wordCount must be 12, 15, 18, 21, or 24.
+//
+// # Concurrency
+//
+// This function is safe for concurrent use. It reads from crypto/rand
+// for entropy generation (non-blocking on modern systems).
 func GenerateMnemonic(wordCount int) (string, error) {
 	const op = "GenerateMnemonic"
 
@@ -63,6 +68,12 @@ func PrivateKeyFromMnemonicWithPassphrase(mnemonic, passphrase string) (NeuronPr
 
 // PrivateKeyFromMnemonicWithOptions derives a private key with full control over options.
 // This is the most flexible mnemonic derivation function.
+//
+// # Concurrency
+//
+// This function is safe for concurrent use. No blocking I/O.
+// Note: BIP32 derivation involves multiple HMAC-SHA512 operations,
+// which is CPU-bound but typically fast (<10ms for standard paths).
 func PrivateKeyFromMnemonicWithOptions(mnemonic, passphrase, path string) (NeuronPrivateKey, error) {
 	const op = "PrivateKeyFromMnemonic"
 

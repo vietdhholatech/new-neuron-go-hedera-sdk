@@ -12,6 +12,11 @@ import (
 
 // GeneratePrivateKey generates a new random ECDSA secp256k1 private key.
 // Uses crypto/rand as the entropy source.
+//
+// # Concurrency
+//
+// This function is safe for concurrent use. It reads from crypto/rand.Reader,
+// which is thread-safe. The read is non-blocking on modern systems.
 func GeneratePrivateKey() (NeuronPrivateKey, error) {
 	const op = "GeneratePrivateKey"
 

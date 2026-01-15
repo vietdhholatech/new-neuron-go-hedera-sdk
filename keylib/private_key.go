@@ -16,6 +16,13 @@ import (
 //
 // This type implements crypto.Signer and provides the unified interface
 // for private key operations across Hedera, Ethereum, and libp2p ecosystems.
+//
+// # Concurrency
+//
+// NeuronPrivateKey is safe for concurrent use by multiple goroutines.
+// All methods are thread-safe except [NeuronPrivateKey.Zeroize], which mutates
+// the receiver and requires external synchronization if called while other
+// goroutines may be using the same key instance.
 type NeuronPrivateKey struct {
 	key *secp256k1.PrivateKey // unexported, never nil after valid construction
 }
@@ -253,6 +260,11 @@ func (k NeuronPrivateKey) MatchesEVMAddress(addr EVMAddress) bool {
 //
 // This provides a best-effort approach to clearing sensitive data from memory.
 // Due to Go's garbage collector, complete removal is not guaranteed.
+//
+// # Concurrency
+//
+// WARNING: This method is NOT safe for concurrent use. It mutates the receiver.
+// Ensure no other goroutines are accessing this key when calling Zeroize.
 func (k *NeuronPrivateKey) Zeroize() {
 	if k == nil || k.key == nil {
 		return

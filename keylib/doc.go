@@ -122,4 +122,30 @@
 //   - Use Scramble() for persistent storage
 //   - Never log or print private key hex values
 //   - Use constant-time Matches* methods for comparisons
+//
+// # Concurrency
+//
+// All types and functions in this package are safe for concurrent use
+// by multiple goroutines unless explicitly noted otherwise.
+//
+// Key characteristics:
+//
+//   - All types (NeuronPrivateKey, NeuronPublicKey, EVMAddress, PeerID, Signature)
+//     are immutable after construction
+//   - No global mutable state exists
+//   - No mutex locks are required for any operations
+//
+// The only exception is [NeuronPrivateKey.Zeroize], which mutates the receiver
+// and requires external synchronization if other goroutines may be accessing
+// the same key instance.
+//
+// # Blocking Operations
+//
+// Most operations are non-blocking and CPU-bound. Notable exceptions:
+//
+//   - [GeneratePrivateKey], [GenerateMnemonic]: Read from crypto/rand
+//     (non-blocking in practice on modern systems)
+//   - [NeuronPrivateKey.Scramble], [UnscramblePrivateKey]: CPU-intensive
+//     Argon2id key derivation (64MB memory, ~100-500ms execution time).
+//     Consider limiting concurrent calls in high-throughput scenarios.
 package keylib

@@ -1,0 +1,1701 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Interactive API for testing Neuron keylib functionality",
+        "title": "Keylib API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/api/v1",
+    "paths": {
+        "/derive/evm-address": {
+            "post": {
+                "description": "Derive the Ethereum address from a public key hex string",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "derive"
+                ],
+                "summary": "Derive EVM address from public key",
+                "parameters": [
+                    {
+                        "description": "Public key hex",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.DeriveFromPublicKeyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.EVMAddressResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/derive/evm-address-safe": {
+            "post": {
+                "description": "Derive the Ethereum address from a public key with explicit error handling for zero keys",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "derive"
+                ],
+                "summary": "Derive EVM address with error checking",
+                "parameters": [
+                    {
+                        "description": "Public key hex",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.DeriveFromPublicKeyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.EVMAddressResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/derive/peer-id": {
+            "post": {
+                "description": "Derive the libp2p peer ID from a public key hex string",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "derive"
+                ],
+                "summary": "Derive libp2p peer ID from public key",
+                "parameters": [
+                    {
+                        "description": "Public key hex",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.DeriveFromPublicKeyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.PeerIDResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/derive/public-key": {
+            "post": {
+                "description": "Derive the public key from a private key hex string",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "derive"
+                ],
+                "summary": "Derive public key from private key",
+                "parameters": [
+                    {
+                        "description": "Private key hex",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.DeriveFromPrivateKeyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.PublicKeyResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/encryption/scramble": {
+            "post": {
+                "description": "Encrypt a private key using AES-256-GCM with Argon2id key derivation",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "encryption"
+                ],
+                "summary": "Encrypt a private key",
+                "parameters": [
+                    {
+                        "description": "Private key and password",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ScrambleRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ScrambleResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/encryption/unscramble": {
+            "post": {
+                "description": "Decrypt an encrypted private key using the password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "encryption"
+                ],
+                "summary": "Decrypt a private key",
+                "parameters": [
+                    {
+                        "description": "Encrypted key and password",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.UnscrambleRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.KeyPairResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/identifiers/evm-checksum": {
+            "post": {
+                "description": "Convert an EVM address to its EIP-55 checksummed form",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "identifiers"
+                ],
+                "summary": "Get EIP-55 checksum address",
+                "parameters": [
+                    {
+                        "description": "EVM address",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ParseEVMAddressRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.EVMAddressResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/identifiers/parse-evm-address": {
+            "post": {
+                "description": "Parse and validate an Ethereum address from hex string",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "identifiers"
+                ],
+                "summary": "Parse an EVM address",
+                "parameters": [
+                    {
+                        "description": "EVM address",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ParseEVMAddressRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.EVMAddressResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/identifiers/parse-peer-id": {
+            "post": {
+                "description": "Parse and validate a libp2p peer ID string",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "identifiers"
+                ],
+                "summary": "Parse a peer ID",
+                "parameters": [
+                    {
+                        "description": "Peer ID",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ParsePeerIDRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.PeerIDResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/keys/generate": {
+            "post": {
+                "description": "Generate a new random ECDSA secp256k1 private key and derive all identifiers",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "keys"
+                ],
+                "summary": "Generate new keypair",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.KeyPairResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/keys/parse/private": {
+            "post": {
+                "description": "Parse and validate a private key from hex string",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "keys"
+                ],
+                "summary": "Parse private key from hex",
+                "parameters": [
+                    {
+                        "description": "Private key hex",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ParsePrivateKeyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.KeyPairResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/keys/parse/public": {
+            "post": {
+                "description": "Parse and validate a public key from hex string (compressed or uncompressed)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "keys"
+                ],
+                "summary": "Parse public key from hex",
+                "parameters": [
+                    {
+                        "description": "Public key hex",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ParsePublicKeyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.PublicKeyResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/matching/private-matches-evm": {
+            "post": {
+                "description": "Verify that a private key derives to a given EVM address",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "matching"
+                ],
+                "summary": "Check if private key matches EVM address",
+                "parameters": [
+                    {
+                        "description": "Private key and EVM address",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchPrivateEVMRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/matching/private-matches-public": {
+            "post": {
+                "description": "Verify that a private key corresponds to a given public key",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "matching"
+                ],
+                "summary": "Check if private key matches public key",
+                "parameters": [
+                    {
+                        "description": "Private and public keys",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchPrivatePublicRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/matching/public-matches-evm": {
+            "post": {
+                "description": "Verify that a public key derives to a given EVM address",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "matching"
+                ],
+                "summary": "Check if public key matches EVM address",
+                "parameters": [
+                    {
+                        "description": "Public key and EVM address",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchPublicEVMRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/matching/public-matches-peer": {
+            "post": {
+                "description": "Verify that a public key derives to a given libp2p peer ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "matching"
+                ],
+                "summary": "Check if public key matches peer ID",
+                "parameters": [
+                    {
+                        "description": "Public key and peer ID",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchPublicPeerIDRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/mnemonic/derive-key": {
+            "post": {
+                "description": "Derive a private key from a BIP39 mnemonic using default path (m/44'/60'/0'/0/0)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "mnemonic"
+                ],
+                "summary": "Derive key from mnemonic",
+                "parameters": [
+                    {
+                        "description": "Mnemonic phrase",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.DeriveFromMnemonicRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.KeyPairResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/mnemonic/derive-key-full": {
+            "post": {
+                "description": "Derive a private key from a BIP39 mnemonic with custom passphrase and derivation path",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "mnemonic"
+                ],
+                "summary": "Derive key with options",
+                "parameters": [
+                    {
+                        "description": "Mnemonic with options",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.DeriveFromMnemonicFullRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.KeyPairResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/mnemonic/generate": {
+            "post": {
+                "description": "Generate a new BIP39 mnemonic phrase with specified word count",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "mnemonic"
+                ],
+                "summary": "Generate a new mnemonic",
+                "parameters": [
+                    {
+                        "description": "Word count (12, 15, 18, 21, or 24)",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.GenerateMnemonicRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MnemonicResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/mnemonic/validate": {
+            "post": {
+                "description": "Validate a BIP39 mnemonic phrase",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "mnemonic"
+                ],
+                "summary": "Validate a mnemonic",
+                "parameters": [
+                    {
+                        "description": "Mnemonic phrase",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ValidateMnemonicRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ValidateResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/signatures/components": {
+            "post": {
+                "description": "Parse a signature and return its R, S, V components",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "signatures"
+                ],
+                "summary": "Get signature components",
+                "parameters": [
+                    {
+                        "description": "Signature hex",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ParseSignatureRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.SignatureComponentsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/signatures/parse": {
+            "post": {
+                "description": "Parse and validate a signature from hex string (65 bytes: R || S || V)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "signatures"
+                ],
+                "summary": "Parse a signature from hex",
+                "parameters": [
+                    {
+                        "description": "Signature hex",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ParseSignatureRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.SignatureComponentsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/signatures/recover-from-digest": {
+            "post": {
+                "description": "Recover the public key that signed a 32-byte digest from the signature",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "signatures"
+                ],
+                "summary": "Recover public key from signed digest",
+                "parameters": [
+                    {
+                        "description": "Recover from digest request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.RecoverFromDigestRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.PublicKeyResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/signatures/recover-pubkey": {
+            "post": {
+                "description": "Recover the public key that signed a message from the signature",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "signatures"
+                ],
+                "summary": "Recover public key from signed message",
+                "parameters": [
+                    {
+                        "description": "Recover request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.RecoverPublicKeyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.PublicKeyResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/signing/sign-digest": {
+            "post": {
+                "description": "Sign a 32-byte digest with a private key",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "signing"
+                ],
+                "summary": "Sign a pre-hashed digest",
+                "parameters": [
+                    {
+                        "description": "Sign digest request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.SignDigestRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.SignatureResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/signing/sign-message": {
+            "post": {
+                "description": "Sign a message with a private key (message is hashed with Keccak256)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "signing"
+                ],
+                "summary": "Sign a message",
+                "parameters": [
+                    {
+                        "description": "Sign message request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.SignMessageRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.SignatureResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/signing/verify-digest": {
+            "post": {
+                "description": "Verify a signature over a 32-byte digest using a public key",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "signing"
+                ],
+                "summary": "Verify a digest signature",
+                "parameters": [
+                    {
+                        "description": "Verify digest request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.VerifyDigestRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.VerifyResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/signing/verify-message": {
+            "post": {
+                "description": "Verify a signature over a message using a public key",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "signing"
+                ],
+                "summary": "Verify a message signature",
+                "parameters": [
+                    {
+                        "description": "Verify message request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.VerifyMessageRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.VerifyResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.DeriveFromMnemonicFullRequest": {
+            "type": "object",
+            "required": [
+                "mnemonic"
+            ],
+            "properties": {
+                "mnemonic": {
+                    "type": "string",
+                    "example": "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
+                },
+                "passphrase": {
+                    "type": "string",
+                    "example": ""
+                },
+                "path": {
+                    "type": "string",
+                    "example": "m/44'/60'/0'/0/0"
+                }
+            }
+        },
+        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.DeriveFromMnemonicRequest": {
+            "type": "object",
+            "required": [
+                "mnemonic"
+            ],
+            "properties": {
+                "mnemonic": {
+                    "type": "string",
+                    "example": "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
+                }
+            }
+        },
+        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.DeriveFromPrivateKeyRequest": {
+            "type": "object",
+            "required": [
+                "privateKeyHex"
+            ],
+            "properties": {
+                "privateKeyHex": {
+                    "type": "string",
+                    "example": "0x1234567890abcdef..."
+                }
+            }
+        },
+        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.DeriveFromPublicKeyRequest": {
+            "type": "object",
+            "required": [
+                "publicKeyHex"
+            ],
+            "properties": {
+                "publicKeyHex": {
+                    "type": "string",
+                    "example": "0x02759b048e7ccf6ba68f9658105a4a139b5f9f5dfd451857c600cc28f33a1a99ae"
+                }
+            }
+        },
+        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.EVMAddressResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "example": "0xe364f2f1e5f4f03d1df682322500b9c68c997ec3"
+                },
+                "addressChecksum": {
+                    "type": "string",
+                    "example": "0xe364f2f1e5F4F03d1df682322500b9c68C997ec3"
+                },
+                "isZero": {
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.EncryptedKeyDTO": {
+            "type": "object",
+            "properties": {
+                "ciphertext": {
+                    "type": "string",
+                    "example": "base64..."
+                },
+                "nonce": {
+                    "type": "string",
+                    "example": "base64..."
+                },
+                "salt": {
+                    "type": "string",
+                    "example": "base64..."
+                },
+                "version": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "invalid hex format"
+                }
+            }
+        },
+        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.GenerateMnemonicRequest": {
+            "type": "object",
+            "required": [
+                "wordCount"
+            ],
+            "properties": {
+                "wordCount": {
+                    "type": "integer",
+                    "enum": [
+                        12,
+                        15,
+                        18,
+                        21,
+                        24
+                    ],
+                    "example": 12
+                }
+            }
+        },
+        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.KeyPairResponse": {
+            "type": "object",
+            "properties": {
+                "evmAddress": {
+                    "type": "string",
+                    "example": "0xe364f2f1e5f4f03d1df682322500b9c68c997ec3"
+                },
+                "evmAddressChecksum": {
+                    "type": "string",
+                    "example": "0xe364f2f1e5F4F03d1df682322500b9c68C997ec3"
+                },
+                "peerID": {
+                    "type": "string",
+                    "example": "16Uiu2HAm3Lkn9NRieuh3UUTWMNthSDumQL9ctTBKxQqdCC79WUSq"
+                },
+                "privateKeyHex": {
+                    "type": "string",
+                    "example": "0x1234567890abcdef..."
+                },
+                "publicKeyHex": {
+                    "type": "string",
+                    "example": "0x02759b048e7ccf6ba68f9658105a4a139b5f9f5dfd451857c600cc28f33a1a99ae"
+                },
+                "publicKeyHexUncompressed": {
+                    "type": "string",
+                    "example": "0x04759b048e7ccf6ba68f9658105a4a139b5f9f5dfd451857c600cc28f33a1a99ae..."
+                }
+            }
+        },
+        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchPrivateEVMRequest": {
+            "type": "object",
+            "required": [
+                "evmAddress",
+                "privateKeyHex"
+            ],
+            "properties": {
+                "evmAddress": {
+                    "type": "string",
+                    "example": "0xe364f2f1e5F4F03d1df682322500b9c68C997ec3"
+                },
+                "privateKeyHex": {
+                    "type": "string",
+                    "example": "0x1234567890abcdef..."
+                }
+            }
+        },
+        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchPrivatePublicRequest": {
+            "type": "object",
+            "required": [
+                "privateKeyHex",
+                "publicKeyHex"
+            ],
+            "properties": {
+                "privateKeyHex": {
+                    "type": "string",
+                    "example": "0x1234567890abcdef..."
+                },
+                "publicKeyHex": {
+                    "type": "string",
+                    "example": "0x02759b048e7ccf6ba68f9658105a4a139b5f9f5dfd451857c600cc28f33a1a99ae"
+                }
+            }
+        },
+        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchPublicEVMRequest": {
+            "type": "object",
+            "required": [
+                "evmAddress",
+                "publicKeyHex"
+            ],
+            "properties": {
+                "evmAddress": {
+                    "type": "string",
+                    "example": "0xe364f2f1e5F4F03d1df682322500b9c68C997ec3"
+                },
+                "publicKeyHex": {
+                    "type": "string",
+                    "example": "0x02759b048e7ccf6ba68f9658105a4a139b5f9f5dfd451857c600cc28f33a1a99ae"
+                }
+            }
+        },
+        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchPublicPeerIDRequest": {
+            "type": "object",
+            "required": [
+                "peerID",
+                "publicKeyHex"
+            ],
+            "properties": {
+                "peerID": {
+                    "type": "string",
+                    "example": "16Uiu2HAm3Lkn9NRieuh3UUTWMNthSDumQL9ctTBKxQqdCC79WUSq"
+                },
+                "publicKeyHex": {
+                    "type": "string",
+                    "example": "0x02759b048e7ccf6ba68f9658105a4a139b5f9f5dfd451857c600cc28f33a1a99ae"
+                }
+            }
+        },
+        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MatchResponse": {
+            "type": "object",
+            "properties": {
+                "matches": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.MnemonicResponse": {
+            "type": "object",
+            "properties": {
+                "mnemonic": {
+                    "type": "string",
+                    "example": "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
+                },
+                "wordCount": {
+                    "type": "integer",
+                    "example": 12
+                }
+            }
+        },
+        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ParseEVMAddressRequest": {
+            "type": "object",
+            "required": [
+                "address"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "example": "0xe364f2f1e5F4F03d1df682322500b9c68C997ec3"
+                }
+            }
+        },
+        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ParsePeerIDRequest": {
+            "type": "object",
+            "required": [
+                "peerID"
+            ],
+            "properties": {
+                "peerID": {
+                    "type": "string",
+                    "example": "16Uiu2HAm3Lkn9NRieuh3UUTWMNthSDumQL9ctTBKxQqdCC79WUSq"
+                }
+            }
+        },
+        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ParsePrivateKeyRequest": {
+            "type": "object",
+            "required": [
+                "hex"
+            ],
+            "properties": {
+                "hex": {
+                    "type": "string",
+                    "example": "0x1234567890abcdef..."
+                }
+            }
+        },
+        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ParsePublicKeyRequest": {
+            "type": "object",
+            "required": [
+                "hex"
+            ],
+            "properties": {
+                "hex": {
+                    "type": "string",
+                    "example": "0x02759b048e7ccf6ba68f9658105a4a139b5f9f5dfd451857c600cc28f33a1a99ae"
+                }
+            }
+        },
+        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ParseSignatureRequest": {
+            "type": "object",
+            "required": [
+                "signatureHex"
+            ],
+            "properties": {
+                "signatureHex": {
+                    "type": "string",
+                    "example": "0x...65bytes..."
+                }
+            }
+        },
+        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.PeerIDResponse": {
+            "type": "object",
+            "properties": {
+                "peerID": {
+                    "type": "string",
+                    "example": "16Uiu2HAm3Lkn9NRieuh3UUTWMNthSDumQL9ctTBKxQqdCC79WUSq"
+                }
+            }
+        },
+        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.PublicKeyResponse": {
+            "type": "object",
+            "properties": {
+                "evmAddress": {
+                    "type": "string",
+                    "example": "0xe364f2f1e5f4f03d1df682322500b9c68c997ec3"
+                },
+                "evmAddressChecksum": {
+                    "type": "string",
+                    "example": "0xe364f2f1e5F4F03d1df682322500b9c68C997ec3"
+                },
+                "peerID": {
+                    "type": "string",
+                    "example": "16Uiu2HAm3Lkn9NRieuh3UUTWMNthSDumQL9ctTBKxQqdCC79WUSq"
+                },
+                "publicKeyHex": {
+                    "type": "string",
+                    "example": "0x02759b048e7ccf6ba68f9658105a4a139b5f9f5dfd451857c600cc28f33a1a99ae"
+                },
+                "publicKeyHexUncompressed": {
+                    "type": "string",
+                    "example": "0x04759b048e7ccf6ba68f9658105a4a139b5f9f5dfd451857c600cc28f33a1a99ae..."
+                }
+            }
+        },
+        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.RecoverFromDigestRequest": {
+            "type": "object",
+            "required": [
+                "digestHex",
+                "signatureHex"
+            ],
+            "properties": {
+                "digestHex": {
+                    "type": "string",
+                    "example": "0x1234567890abcdef...32bytes..."
+                },
+                "signatureHex": {
+                    "type": "string",
+                    "example": "0x...65bytes..."
+                }
+            }
+        },
+        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.RecoverPublicKeyRequest": {
+            "type": "object",
+            "required": [
+                "message",
+                "signatureHex"
+            ],
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Hello, World!"
+                },
+                "signatureHex": {
+                    "type": "string",
+                    "example": "0x...65bytes..."
+                }
+            }
+        },
+        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ScrambleRequest": {
+            "type": "object",
+            "required": [
+                "password",
+                "privateKeyHex"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "minLength": 8,
+                    "example": "mypassword123"
+                },
+                "privateKeyHex": {
+                    "type": "string",
+                    "example": "0x1234567890abcdef..."
+                }
+            }
+        },
+        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ScrambleResponse": {
+            "type": "object",
+            "properties": {
+                "encrypted": {
+                    "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.EncryptedKeyDTO"
+                }
+            }
+        },
+        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.SignDigestRequest": {
+            "type": "object",
+            "required": [
+                "digestHex",
+                "privateKeyHex"
+            ],
+            "properties": {
+                "digestHex": {
+                    "type": "string",
+                    "example": "0x1234567890abcdef...32bytes..."
+                },
+                "privateKeyHex": {
+                    "type": "string",
+                    "example": "0x1234567890abcdef..."
+                }
+            }
+        },
+        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.SignMessageRequest": {
+            "type": "object",
+            "required": [
+                "message",
+                "privateKeyHex"
+            ],
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Hello, World!"
+                },
+                "privateKeyHex": {
+                    "type": "string",
+                    "example": "0x1234567890abcdef..."
+                }
+            }
+        },
+        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.SignatureComponentsResponse": {
+            "type": "object",
+            "properties": {
+                "isZero": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "r": {
+                    "type": "string",
+                    "example": "0x..."
+                },
+                "s": {
+                    "type": "string",
+                    "example": "0x..."
+                },
+                "v": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "vEthereum": {
+                    "type": "integer",
+                    "example": 27
+                }
+            }
+        },
+        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.SignatureResponse": {
+            "type": "object",
+            "properties": {
+                "r": {
+                    "type": "string",
+                    "example": "0x..."
+                },
+                "s": {
+                    "type": "string",
+                    "example": "0x..."
+                },
+                "signatureEthHex": {
+                    "type": "string",
+                    "example": "0x...65bytes..."
+                },
+                "signatureHex": {
+                    "type": "string",
+                    "example": "0x...65bytes..."
+                },
+                "v": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "vEthereum": {
+                    "type": "integer",
+                    "example": 27
+                }
+            }
+        },
+        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.UnscrambleRequest": {
+            "type": "object",
+            "required": [
+                "encrypted",
+                "password"
+            ],
+            "properties": {
+                "encrypted": {
+                    "$ref": "#/definitions/github_com_aspect-build_neuron-go-hedera-sdk_api_dto.EncryptedKeyDTO"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "mypassword123"
+                }
+            }
+        },
+        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ValidateMnemonicRequest": {
+            "type": "object",
+            "required": [
+                "mnemonic"
+            ],
+            "properties": {
+                "mnemonic": {
+                    "type": "string",
+                    "example": "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
+                }
+            }
+        },
+        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.ValidateResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": ""
+                },
+                "valid": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.VerifyDigestRequest": {
+            "type": "object",
+            "required": [
+                "digestHex",
+                "publicKeyHex",
+                "signatureHex"
+            ],
+            "properties": {
+                "digestHex": {
+                    "type": "string",
+                    "example": "0x1234567890abcdef...32bytes..."
+                },
+                "publicKeyHex": {
+                    "type": "string",
+                    "example": "0x02759b048e7ccf6ba68f9658105a4a139b5f9f5dfd451857c600cc28f33a1a99ae"
+                },
+                "signatureHex": {
+                    "type": "string",
+                    "example": "0x...65bytes..."
+                }
+            }
+        },
+        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.VerifyMessageRequest": {
+            "type": "object",
+            "required": [
+                "message",
+                "publicKeyHex",
+                "signatureHex"
+            ],
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Hello, World!"
+                },
+                "publicKeyHex": {
+                    "type": "string",
+                    "example": "0x02759b048e7ccf6ba68f9658105a4a139b5f9f5dfd451857c600cc28f33a1a99ae"
+                },
+                "signatureHex": {
+                    "type": "string",
+                    "example": "0x...65bytes..."
+                }
+            }
+        },
+        "github_com_aspect-build_neuron-go-hedera-sdk_api_dto.VerifyResponse": {
+            "type": "object",
+            "properties": {
+                "valid": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        }
+    }
+}

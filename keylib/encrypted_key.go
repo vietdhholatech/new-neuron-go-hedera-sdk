@@ -52,6 +52,18 @@ const CurrentEncryptionVersion = 1
 //
 // The password should be at least 8 characters for reasonable security,
 // though this is not enforced to allow flexibility.
+//
+// # Concurrency
+//
+// This function is safe for concurrent use but is CPU and memory intensive.
+// Each call allocates 64MB of memory and runs Argon2id for ~100-500ms.
+// In high-throughput scenarios, consider limiting concurrent calls using
+// a semaphore or worker pool to prevent memory exhaustion.
+//
+// # Blocking
+//
+// Reads 28 bytes from crypto/rand for salt and nonce (non-blocking).
+// The Argon2id computation is CPU-bound, not I/O-bound.
 func (k NeuronPrivateKey) Scramble(password string) (EncryptedPrivateKey, error) {
 	const op = "NeuronPrivateKey.Scramble"
 
@@ -113,6 +125,16 @@ func (k NeuronPrivateKey) Scramble(password string) (EncryptedPrivateKey, error)
 
 // UnscramblePrivateKey decrypts an encrypted private key with a password.
 // Returns an error if the password is wrong or the data is corrupted.
+//
+// # Concurrency
+//
+// This function is safe for concurrent use but is CPU and memory intensive.
+// Each call allocates 64MB of memory and runs Argon2id for ~100-500ms.
+// In high-throughput scenarios, consider limiting concurrent calls.
+//
+// # Blocking
+//
+// No I/O operations. The Argon2id computation is CPU-bound.
 func UnscramblePrivateKey(encrypted EncryptedPrivateKey, password string) (NeuronPrivateKey, error) {
 	const op = "UnscramblePrivateKey"
 
