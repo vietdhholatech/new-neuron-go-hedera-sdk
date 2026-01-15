@@ -7,7 +7,7 @@ import (
 
 	"github.com/decred/dcrd/dcrec/secp256k1/v4"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
-	"github.com/hashgraph/hedera-sdk-go/v2"
+	hiero "github.com/hiero-ledger/hiero-sdk-go/v2/sdk"
 )
 
 // GeneratePrivateKey generates a new random ECDSA secp256k1 private key.
@@ -72,12 +72,12 @@ func PrivateKeyFromBytes(b [32]byte) (NeuronPrivateKey, error) {
 //  1. DER encoding pattern detection for Ed25519 OID
 //  2. Raw bytes length check (Ed25519 = 64 bytes, ECDSA = 32 bytes)
 //  3. secp256k1 scalar validation as final safety net
-func PrivateKeyFromHedera(hederaKey hedera.PrivateKey) (NeuronPrivateKey, error) {
+func PrivateKeyFromHedera(hederaKey hiero.PrivateKey) (NeuronPrivateKey, error) {
 	const op = "PrivateKeyFromHedera"
 
 	// Check if key is zero/empty first
 	if hederaKey.String() == "" {
-		return NeuronPrivateKey{}, errZeroValue(op, "hedera.PrivateKey")
+		return NeuronPrivateKey{}, errZeroValue(op, "hiero.PrivateKey")
 	}
 
 	// PRIMARY CHECK: Use Hedera SDK's type detection via DER encoding
@@ -158,7 +158,7 @@ func PublicKeyFromBytes(b []byte) (NeuronPublicKey, error) {
 
 // PublicKeyFromHedera creates a NeuronPublicKey from a Hedera SDK PublicKey.
 // Only ECDSA secp256k1 keys are supported; Ed25519 keys are rejected.
-func PublicKeyFromHedera(hederaKey hedera.PublicKey) (NeuronPublicKey, error) {
+func PublicKeyFromHedera(hederaKey hiero.PublicKey) (NeuronPublicKey, error) {
 	const op = "PublicKeyFromHedera"
 
 	// Get raw bytes from Hedera key
@@ -228,7 +228,7 @@ func MustParsePeerID(s string) PeerID {
 // Uses multiple detection methods for reliability:
 //  1. DER encoding pattern detection for Ed25519 OID
 //  2. Raw bytes length check (Ed25519 = 64 bytes)
-func IsEd25519Key(hederaKey hedera.PrivateKey) bool {
+func IsEd25519Key(hederaKey hiero.PrivateKey) bool {
 	// Method 1: Check DER encoding for Ed25519 OID
 	// Ed25519 OID: 1.3.101.112 encoded as "2b6570" in hex
 	derStr := hederaKey.String()
@@ -249,7 +249,7 @@ func IsEd25519Key(hederaKey hedera.PrivateKey) bool {
 
 // IsEd25519PublicKey detects if a Hedera public key is Ed25519 type.
 // Ed25519 public keys are 32 bytes raw, while ECDSA are 33 (compressed) or 65 (uncompressed).
-func IsEd25519PublicKey(hederaKey hedera.PublicKey) bool {
+func IsEd25519PublicKey(hederaKey hiero.PublicKey) bool {
 	// Ed25519 public keys are 32 bytes raw
 	// ECDSA public keys are 33 (compressed) or 65 (uncompressed) bytes
 	rawLen := len(hederaKey.BytesRaw())

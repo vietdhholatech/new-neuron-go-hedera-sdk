@@ -10,7 +10,7 @@ This document maps the implemented keylib functionality to the exact technical r
 | ------------------------------- | -------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | A. The "Neuron Key" Elevation   | Complete | 100%     | Immutable wrapper types (`NeuronPrivateKey`, `NeuronPublicKey`) with unexported `*secp256k1.PrivateKey`/`*secp256k1.PublicKey` fields. Factory functions (`ParsePrivateKeyHex`, `PrivateKeyFromBytes`, `PrivateKeyFromHedera`) validate inputs and return `(T, error)`. Zero-value structs are explicitly invalid (`IsZero()` returns true). All constructors enforce secp256k1 curve constraints.                                                                                                                                                              |
 | B. Primary Key Strategy (ECDSA) | Complete | 100%     | All key operations use `github.com/decred/dcrd/dcrec/secp256k1/v4` curve. Ed25519 rejection via 3-tier detection: (1) DER encoding pattern matching for OID sequences `302e`, `2b6570`, `302a`; (2) raw bytes length check (Ed25519=64 bytes vs ECDSA=32 bytes); (3) secp256k1 scalar validation (0 < scalar < N where N=0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141).                                                                                                                                                                   |
-| C. Robust Conversion Matrix     | Complete | 100%     | **EVM Address**: Keccak256(uncompressed_pubkey[1:]) → last 20 bytes. **PeerID**: `libp2p/go-libp2p/core/crypto.UnmarshalSecp256k1PublicKey()` → `peer.IDFromPublicKey()` → base58 multihash encoding. **Hedera interop**: `ToHederaPrivateKey()` via `hedera.PrivateKeyFromBytesECDSA()`, `ToHederaPublicKey()` via `hedera.PublicKeyFromBytesECDSA()`. Safe variants (`*Safe()`) return errors instead of zero values.                                                                                                                                         |
+| C. Robust Conversion Matrix     | Complete | 100%     | **EVM Address**: Keccak256(uncompressed_pubkey[1:]) → last 20 bytes. **PeerID**: `libp2p/go-libp2p/core/crypto.UnmarshalSecp256k1PublicKey()` → `peer.IDFromPublicKey()` → base58 multihash encoding. **Hedera interop**: `ToHederaPrivateKey()` via `hiero.PrivateKeyFromBytesECDSA()`, `ToHederaPublicKey()` via `hiero.PublicKeyFromBytesECDSA()` (using Hiero SDK v2.74.0). Safe variants (`*Safe()`) return errors instead of zero values.                                                                                                                   |
 | D. Input Handling & Validation  | Complete | 100%     | **Hex parsing**: `normalizeHex()` strips `0x`/`0X` prefix, lowercases; `validateHexString()` returns exact position of invalid character. **Private key validation**: `isValidSecp256k1Scalar()` checks 0 < scalar < curve order N. **Public key validation**: SEC1 format check (33 bytes compressed with 0x02/0x03 prefix, or 65 bytes uncompressed with 0x04 prefix); point-on-curve verification via `secp256k1.ParsePubKey()`. **Error types**: `KeyError{Op, Kind, Details, Err}` with 10 distinct `ErrorKind` values.                                    |
 | E. Type Safety                  | Complete | 100%     | Distinct struct types prevent confusion: `NeuronPrivateKey{key *secp256k1.PrivateKey}`, `NeuronPublicKey{key *secp256k1.PublicKey}`, `EVMAddress{addr [20]byte}`, `PeerID{id peer.ID}`, `Signature{data [65]byte}`, `EncryptedPrivateKey{Version, Salt, Nonce, Ciphertext}`. All fields unexported; access only via validated constructors. Method receivers prevent nil-pointer panics with `IsZero()` guards.                                                                                                                                                 |
 | Key Management Functions        | Complete | 100%     | **Generation**: `crypto/rand.Read()` → secp256k1 scalar validation → `NeuronPrivateKey`. **Mnemonic**: BIP39 via `go-bip39`; BIP32 derivation via custom HMAC-SHA512 implementation; default path `m/44'/60'/0'/0/0`. **Signing**: `SignMessage()` applies Keccak256 then ECDSA sign with recovery ID; `SignDigest()` for pre-hashed data. **Encryption**: Argon2id KDF (time=3, memory=64MB, threads=4, keyLen=32) → AES-256-GCM (12-byte random nonce per encryption). **Matching**: `subtle.ConstantTimeCompare()` for all `Matches*` and `Equal()` methods. |
@@ -78,7 +78,8 @@ Detection uses three methods:
 
 ```go
 // IsEd25519Key detects if a Hedera private key is Ed25519 type.
-func IsEd25519Key(hederaKey hedera.PrivateKey) bool {
+// Note: Uses hiero.PrivateKey from the Hiero SDK (formerly Hedera SDK)
+func IsEd25519Key(hederaKey hiero.PrivateKey) bool {
     // Method 1: Check DER encoding for Ed25519 OID
     derStr := hederaKey.String()
     if strings.Contains(derStr, "302e") ||
@@ -469,10 +470,10 @@ pubKey, err := keylib.PublicKeyFromBytes(compressedBytes)
 #### Elevate Hedera Key to Neuron Key
 
 ```go
-import "github.com/hashgraph/hedera-sdk-go/v2"
+import hiero "github.com/hiero-ledger/hiero-sdk-go/v2/sdk"
 
-// From Hedera ECDSA private key
-hederaPrivate, _ := hedera.PrivateKeyGenerateEcdsa()
+// From Hedera ECDSA private key (using Hiero SDK)
+hederaPrivate, _ := hiero.PrivateKeyGenerateEcdsa()
 neuronPrivate, err := keylib.PrivateKeyFromHedera(hederaPrivate)
 if err != nil {
     // Possible errors:
@@ -511,8 +512,8 @@ if err != nil {
     log.Fatalf("conversion failed: %v", err)
 }
 
-// Use with Hedera SDK
-client, _ := hedera.ClientForTestnet()
+// Use with Hiero SDK (Hedera network)
+client, _ := hiero.ClientForTestnet()
 client.SetOperator(accountID, hederaKey)
 ```
 

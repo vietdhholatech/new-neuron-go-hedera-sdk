@@ -5,7 +5,7 @@ import (
 
 	"github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/hashgraph/hedera-sdk-go/v2"
+	hiero "github.com/hiero-ledger/hiero-sdk-go/v2/sdk"
 )
 
 // NeuronPublicKey is an immutable, validated ECDSA secp256k1 public key.
@@ -140,34 +140,34 @@ func (k NeuronPublicKey) ToECDSA() *ecdsa.PublicKey {
 //
 // WARNING: Silently returns empty key on failure. Use ToHederaPublicKeySafe()
 // if you need explicit error handling.
-func (k NeuronPublicKey) ToHederaPublicKey() hedera.PublicKey {
+func (k NeuronPublicKey) ToHederaPublicKey() hiero.PublicKey {
 	if k.IsZero() {
-		return hedera.PublicKey{}
+		return hiero.PublicKey{}
 	}
 
 	// Get compressed bytes and create Hedera public key
 	compressed := k.CompressedBytes()
-	hederaPubKey, err := hedera.PublicKeyFromBytesECDSA(compressed[:])
+	hederaPubKey, err := hiero.PublicKeyFromBytesECDSA(compressed[:])
 	if err != nil {
 		// This should never happen with a valid key
-		return hedera.PublicKey{}
+		return hiero.PublicKey{}
 	}
 	return hederaPubKey
 }
 
 // ToHederaPublicKeySafe converts to Hedera SDK PublicKey with error handling.
 // Returns an error if the key is zero-value or conversion fails.
-func (k NeuronPublicKey) ToHederaPublicKeySafe() (hedera.PublicKey, error) {
+func (k NeuronPublicKey) ToHederaPublicKeySafe() (hiero.PublicKey, error) {
 	const op = "NeuronPublicKey.ToHederaPublicKeySafe"
 
 	if err := k.checkValid(op); err != nil {
-		return hedera.PublicKey{}, err
+		return hiero.PublicKey{}, err
 	}
 
 	compressed := k.CompressedBytes()
-	hederaPubKey, err := hedera.PublicKeyFromBytesECDSA(compressed[:])
+	hederaPubKey, err := hiero.PublicKeyFromBytesECDSA(compressed[:])
 	if err != nil {
-		return hedera.PublicKey{}, wrapError(op, ErrKindDerivation, "failed to create Hedera public key", err)
+		return hiero.PublicKey{}, wrapError(op, ErrKindDerivation, "failed to create Hedera public key", err)
 	}
 	return hederaPubKey, nil
 }

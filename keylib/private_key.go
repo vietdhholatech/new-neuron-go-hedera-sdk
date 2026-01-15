@@ -8,7 +8,7 @@ import (
 
 	"github.com/decred/dcrd/dcrec/secp256k1/v4"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
-	"github.com/hashgraph/hedera-sdk-go/v2"
+	hiero "github.com/hiero-ledger/hiero-sdk-go/v2/sdk"
 )
 
 // NeuronPrivateKey is an immutable, validated ECDSA secp256k1 private key.
@@ -125,33 +125,33 @@ func (k NeuronPrivateKey) ToECDSA() *ecdsa.PrivateKey {
 //
 // WARNING: Silently returns empty key on failure. Use ToHederaPrivateKeySafe()
 // if you need explicit error handling.
-func (k NeuronPrivateKey) ToHederaPrivateKey() hedera.PrivateKey {
+func (k NeuronPrivateKey) ToHederaPrivateKey() hiero.PrivateKey {
 	if k.IsZero() {
-		return hedera.PrivateKey{}
+		return hiero.PrivateKey{}
 	}
 
 	keyBytes := k.Bytes()
-	hederaKey, err := hedera.PrivateKeyFromBytesECDSA(keyBytes[:])
+	hederaKey, err := hiero.PrivateKeyFromBytesECDSA(keyBytes[:])
 	if err != nil {
 		// This should never happen with a valid key
-		return hedera.PrivateKey{}
+		return hiero.PrivateKey{}
 	}
 	return hederaKey
 }
 
 // ToHederaPrivateKeySafe converts to Hedera SDK PrivateKey with error handling.
 // Returns an error if the key is zero-value or conversion fails.
-func (k NeuronPrivateKey) ToHederaPrivateKeySafe() (hedera.PrivateKey, error) {
+func (k NeuronPrivateKey) ToHederaPrivateKeySafe() (hiero.PrivateKey, error) {
 	const op = "NeuronPrivateKey.ToHederaPrivateKeySafe"
 
 	if err := k.checkValid(op); err != nil {
-		return hedera.PrivateKey{}, err
+		return hiero.PrivateKey{}, err
 	}
 
 	keyBytes := k.Bytes()
-	hederaKey, err := hedera.PrivateKeyFromBytesECDSA(keyBytes[:])
+	hederaKey, err := hiero.PrivateKeyFromBytesECDSA(keyBytes[:])
 	if err != nil {
-		return hedera.PrivateKey{}, wrapError(op, ErrKindDerivation, "failed to create Hedera key", err)
+		return hiero.PrivateKey{}, wrapError(op, ErrKindDerivation, "failed to create Hedera key", err)
 	}
 	return hederaKey, nil
 }
