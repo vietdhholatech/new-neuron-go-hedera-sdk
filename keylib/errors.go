@@ -114,36 +114,6 @@ func newKeyError(op string, kind ErrorKind, details string, err error) *KeyError
 // Sentinel errors for common checks.
 // These can be used with errors.Is() for error matching.
 var (
-	// ErrNilPrivateKey indicates a nil or zero-value private key.
-	ErrNilPrivateKey = &KeyError{
-		Kind:    ErrKindZeroValue,
-		Details: "nil or zero-value private key",
-	}
-
-	// ErrNilPublicKey indicates a nil or zero-value public key.
-	ErrNilPublicKey = &KeyError{
-		Kind:    ErrKindZeroValue,
-		Details: "nil or zero-value public key",
-	}
-
-	// ErrNilSignature indicates a nil or zero-value signature.
-	ErrNilSignature = &KeyError{
-		Kind:    ErrKindZeroValue,
-		Details: "nil or zero-value signature",
-	}
-
-	// ErrEd25519NotAllowed indicates an attempt to use an Ed25519 key.
-	ErrEd25519NotAllowed = &KeyError{
-		Kind:    ErrKindUnsupportedKeyType,
-		Details: "Ed25519 keys are not supported; only secp256k1 ECDSA keys are allowed",
-	}
-
-	// ErrInvalidSignature indicates an invalid signature format.
-	ErrInvalidSignature = &KeyError{
-		Kind:    ErrKindInvalidFormat,
-		Details: "invalid signature format",
-	}
-
 	// ErrWrongPassword indicates decryption failed due to wrong password.
 	ErrWrongPassword = &KeyError{
 		Kind:    ErrKindEncryption,

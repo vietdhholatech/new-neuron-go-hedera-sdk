@@ -1,28 +1,34 @@
 # Suggested Commands
 
-## Building
+## Build Commands
 
 ```bash
-# Build keylib package
+# Build the keylib package
 go build ./keylib
 
-# Build API server
+# Build the API server
 go build ./cmd/keylib-api
 
 # Build all packages
 go build ./...
 ```
 
-## Testing
+## Test Commands
 
 ```bash
 # Run all tests
+go test ./...
+
+# Run tests with verbose output
+go test ./... -v
+
+# Run tests for keylib only
 go test ./keylib -v
 
 # Run tests with coverage
 go test ./keylib -v -cover
 
-# Generate coverage report (HTML)
+# Generate coverage report
 go test ./keylib -coverprofile=coverage.out
 go tool cover -html=coverage.out -o coverage.html
 
@@ -31,77 +37,63 @@ go test ./keylib -v -run TestPrivateKeyFromHex
 
 # Run benchmarks
 go test ./keylib -bench=.
-
-# Run tests with race detection
-go test ./keylib -race
 ```
 
 ## Linting and Formatting
 
 ```bash
-# Run go vet
-go vet ./keylib
+# Check for issues
 go vet ./...
 
-# Check formatting (shows diff)
+# Check formatting
 gofmt -d ./keylib
 
-# Apply formatting
+# Format code
 gofmt -w ./keylib
 
 # Run staticcheck (if installed)
-staticcheck ./keylib
 staticcheck ./...
 ```
 
 ## Running the API Server
 
 ```bash
-# Run directly
+# Run the API server
 go run ./cmd/keylib-api
 
-# Build and run
-go build -o keylib-api ./cmd/keylib-api
-./keylib-api
-
-# Server starts on :8080
+# The server starts on :8080
 # Swagger UI: http://localhost:8080/swagger/index.html
+# Health check: http://localhost:8080/health
 ```
 
-## Viewing Documentation
+## Documentation Commands
 
 ```bash
-# View package overview
+# View package documentation
 go doc ./keylib
 
-# View complete package documentation
+# View full documentation with all symbols
 go doc -all ./keylib
 
 # View specific type
 go doc ./keylib NeuronPrivateKey
 
 # View specific function
-go doc ./keylib ParsePrivateKeyHex
-
-# View method documentation
-go doc ./keylib NeuronPrivateKey.SignMessage
+go doc ./keylib GeneratePrivateKey
 
 # Start local godoc server
 godoc -http=:6060
-# Then open: http://localhost:6060/pkg/github.com/aspect-build/neuron-go-hedera-sdk/keylib/
+# Then open http://localhost:6060/pkg/github.com/aspect-build/neuron-go-hedera-sdk/keylib/
 ```
 
 ## Swagger Documentation
 
 ```bash
-# Regenerate Swagger docs (requires swag CLI)
+# Regenerate swagger docs (if swag is installed)
 swag init -g cmd/keylib-api/main.go -o api/docs
-
-# Install swag CLI
-go install github.com/swaggo/swag/cmd/swag@latest
 ```
 
-## Dependencies
+## Dependency Management
 
 ```bash
 # Download dependencies
@@ -110,28 +102,11 @@ go mod download
 # Tidy dependencies
 go mod tidy
 
-# Verify dependencies
-go mod verify
-
-# View dependency graph
-go mod graph
+# Update dependencies
+go get -u ./...
 ```
 
-## Git Operations
-
-```bash
-# Status
-git status
-
-# Add and commit
-git add .
-git commit -m "message"
-
-# View log
-git log --oneline -10
-```
-
-## System Commands (Darwin/macOS)
+## Utility Commands (Darwin/macOS)
 
 ```bash
 # List files
@@ -140,11 +115,11 @@ ls -la
 # Find files
 find . -name "*.go" -type f
 
-# Search in files (prefer ripgrep if available)
-grep -r "pattern" ./keylib
-rg "pattern" ./keylib
+# Search in files
+grep -r "pattern" --include="*.go"
 
-# View file
-cat keylib/doc.go
-less keylib/doc.go
+# Git operations
+git status
+git diff
+git log --oneline -10
 ```

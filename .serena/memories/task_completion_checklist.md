@@ -1,76 +1,83 @@
 # Task Completion Checklist
 
-When completing a task in this project, run through the following checklist:
+## Before Committing Changes
 
-## 1. Code Quality
+### 1. Code Quality
+- [ ] Code follows project naming conventions (Parse*, From*, To*, etc.)
+- [ ] All exported functions/types have godoc comments
+- [ ] No panics - all fallible operations return errors
+- [ ] Zero-value structs handled appropriately (IsZero() checks)
+- [ ] Sensitive comparisons use constant-time operations
 
+### 2. Formatting
 ```bash
-# Format code
-gofmt -w ./keylib ./api ./cmd
+# Format all code
+gofmt -w .
 
-# Run vet
+# Or just check
+gofmt -d .
+```
+
+### 3. Static Analysis
+```bash
+# Run go vet
 go vet ./...
 ```
 
-## 2. Build Verification
-
+### 4. Testing
 ```bash
-# Ensure code compiles
+# Run all tests
+go test ./... -v
+
+# With coverage (should be 85%+)
+go test ./keylib -cover
+```
+
+### 5. Build Verification
+```bash
+# Ensure it builds
 go build ./...
 ```
 
-## 3. Test Execution
+## After Making API Changes
 
+If you modified the HTTP API:
+
+### 1. Update Swagger Documentation
 ```bash
-# Run all tests
-go test ./keylib -v
-
-# Run with coverage (target: >85%)
-go test ./keylib -v -cover
-
-# Run with race detection for concurrency changes
-go test ./keylib -race
-```
-
-## 4. If API Changes Were Made
-
-```bash
-# Regenerate Swagger docs
+# Regenerate swagger docs
 swag init -g cmd/keylib-api/main.go -o api/docs
-
-# Verify API server starts
-go run ./cmd/keylib-api &
-curl http://localhost:8080/swagger/index.html
 ```
 
-## 5. Documentation Updates
+### 2. Test API Endpoints
+```bash
+# Start the server
+go run ./cmd/keylib-api
 
-If public API was modified:
-- Update doc comments on affected functions/types
-- Update `keylib/doc.go` if package-level behavior changed
-- Update `keylib/IMPLEMENTATION_MAPPING.md` if specification compliance changed
+# Test endpoints via Swagger UI or curl
+curl http://localhost:8080/health
+```
 
-## 6. Security Considerations
+## For keylib Changes
 
-For crypto-related changes:
-- Ensure constant-time comparison for sensitive data
-- Verify Zeroize() is called where appropriate
-- Check for timing attack vulnerabilities
-- Never log private key values
+### 1. Update Documentation
+- Update godoc comments for new/changed functions
+- Update `doc.go` if adding new major features
+- Update `README.md` or `IMPLEMENTATION_MAPPING.md` if needed
 
-## 7. Thread Safety
+### 2. Thread Safety Considerations
+- New types should be immutable after construction
+- Document any non-thread-safe methods
+- CPU-intensive operations should be noted
 
-For concurrency-related changes:
-- Document thread safety in godoc
-- Run tests with `-race` flag
-- Update concurrency section in IMPLEMENTATION_MAPPING.md if needed
+### 3. Error Handling
+- Use appropriate ErrorKind
+- Include operation name in errors
+- Provide helpful error details
 
-## Quick Validation Commands
+## Quick Verification Commands
 
 ```bash
-# All-in-one validation
-gofmt -w ./keylib && go vet ./keylib && go build ./keylib && go test ./keylib -v -cover
-
-# Full project validation
-gofmt -w . && go vet ./... && go build ./... && go test ./keylib -v -cover
+# One-liner to verify before commit
+gofmt -w . && go vet ./... && go test ./... && go build ./...
 ```

@@ -287,15 +287,6 @@ func (k NeuronPrivateKey) Equal(other NeuronPrivateKey) bool {
 	return constantTimeEqual(k.key.Serialize(), other.key.Serialize())
 }
 
-// newPrivateKeyFromSecp256k1 creates a NeuronPrivateKey from a secp256k1.PrivateKey.
-// This is an internal constructor.
-func newPrivateKeyFromSecp256k1(key *secp256k1.PrivateKey) NeuronPrivateKey {
-	if key == nil {
-		return NeuronPrivateKey{}
-	}
-	return NeuronPrivateKey{key: key}
-}
-
 // newPrivateKeyFromECDSA creates a NeuronPrivateKey from an ecdsa.PrivateKey.
 // This is an internal constructor.
 func newPrivateKeyFromECDSA(key *ecdsa.PrivateKey) NeuronPrivateKey {

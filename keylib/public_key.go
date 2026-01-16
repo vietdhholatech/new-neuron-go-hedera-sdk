@@ -243,33 +243,3 @@ func (k NeuronPublicKey) Equal(other NeuronPublicKey) bool {
 	}
 	return constantTimeEqual(k.key.SerializeCompressed(), other.key.SerializeCompressed())
 }
-
-// newPublicKeyFromSecp256k1 creates a NeuronPublicKey from a secp256k1.PublicKey.
-// This is an internal constructor.
-func newPublicKeyFromSecp256k1(key *secp256k1.PublicKey) NeuronPublicKey {
-	if key == nil {
-		return NeuronPublicKey{}
-	}
-	return NeuronPublicKey{key: key}
-}
-
-// newPublicKeyFromECDSA creates a NeuronPublicKey from an ecdsa.PublicKey.
-// This is an internal constructor.
-func newPublicKeyFromECDSA(key *ecdsa.PublicKey) NeuronPublicKey {
-	if key == nil {
-		return NeuronPublicKey{}
-	}
-
-	// Marshal to bytes and parse as secp256k1
-	pubBytes := crypto.FromECDSAPub(key)
-	if pubBytes == nil {
-		return NeuronPublicKey{}
-	}
-
-	secpKey, err := secp256k1.ParsePubKey(pubBytes)
-	if err != nil {
-		return NeuronPublicKey{}
-	}
-
-	return NeuronPublicKey{key: secpKey}
-}
