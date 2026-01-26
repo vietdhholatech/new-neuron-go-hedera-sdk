@@ -28,21 +28,18 @@ func constantTimeEqualStrings(a, b string) bool {
 // Note: Due to Go's garbage collector and potential compiler optimizations,
 // this may not guarantee complete removal from memory, but it represents
 // a best-effort approach to minimize exposure window.
+//
+// Uses the clear() builtin (Go 1.21+) which is compiler-optimized and
+// may be more resistant to dead-store elimination than manual loops.
 func secureZero(b []byte) {
-	for i := range b {
-		b[i] = 0
-	}
-	// Use KeepAlive pattern indirectly by touching the slice
-	// This helps prevent the compiler from optimizing away the zeroing
-	_ = b[0:0]
+	clear(b)
 }
 
 // secureZeroArray32 overwrites a 32-byte array with zeros.
 // Specialized version for private key sized arrays.
+// Uses the clear() builtin (Go 1.21+) for compiler-optimized zeroing.
 func secureZeroArray32(b *[32]byte) {
-	for i := range b {
-		b[i] = 0
-	}
+	clear(b[:])
 }
 
 // constantTimeSelect returns a if selector is 1, b if selector is 0.

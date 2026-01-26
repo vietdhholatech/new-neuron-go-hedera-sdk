@@ -1,83 +1,97 @@
 # Task Completion Checklist
 
-## Before Committing Changes
+When completing a coding task in this project, verify the following:
 
-### 1. Code Quality
-- [ ] Code follows project naming conventions (Parse*, From*, To*, etc.)
-- [ ] All exported functions/types have godoc comments
-- [ ] No panics - all fallible operations return errors
-- [ ] Zero-value structs handled appropriately (IsZero() checks)
-- [ ] Sensitive comparisons use constant-time operations
+## Before Committing
 
-### 2. Formatting
+### 1. Build Verification
 ```bash
-# Format all code
-gofmt -w .
-
-# Or just check
-gofmt -d .
-```
-
-### 3. Static Analysis
-```bash
-# Run go vet
-go vet ./...
-```
-
-### 4. Testing
-```bash
-# Run all tests
-go test ./... -v
-
-# With coverage (should be 85%+)
-go test ./keylib -cover
-```
-
-### 5. Build Verification
-```bash
-# Ensure it builds
+# Ensure the project builds without errors
 go build ./...
 ```
 
-## After Making API Changes
+### 2. Run Tests
+```bash
+# Run all tests and verify they pass
+go test ./... -v
 
-If you modified the HTTP API:
+# For keylib changes, run with coverage
+go test ./keylib -v -cover
+```
 
-### 1. Update Swagger Documentation
+### 3. Code Quality
+```bash
+# Run go vet
+go vet ./...
+
+# Check formatting
+gofmt -d ./keylib ./account ./api
+```
+
+### 4. Documentation
+- Update godoc comments if public API changed
+- Update README.md if needed
+- Update IMPLEMENTATION_MAPPING.md if implementing spec requirements
+
+## For New Features
+
+### Type Safety
+- [ ] New types have unexported fields
+- [ ] Factory functions validate all inputs
+- [ ] `IsZero()` method implemented
+- [ ] Zero-value struct is explicitly invalid
+
+### Error Handling
+- [ ] Use `KeyError` with appropriate `ErrorKind`
+- [ ] Include operation name in `Op` field
+- [ ] Provide descriptive `Details` message
+- [ ] Wrap underlying errors
+
+### Security (for crypto operations)
+- [ ] Use constant-time comparisons for sensitive data
+- [ ] Implement `Zeroize()` for private key types
+- [ ] Add `*Safe()` variant if method could fail silently
+- [ ] No timing-based vulnerabilities
+
+### Testing
+- [ ] Table-driven tests for all cases
+- [ ] Test error conditions
+- [ ] Test edge cases (zero values, invalid inputs)
+- [ ] Add integration test with known vectors if applicable
+
+## For API Changes
+
+### Swagger Documentation
 ```bash
 # Regenerate swagger docs
-swag init -g cmd/keylib-api/main.go -o api/docs
+swag init -g cmd/keylib-api/main.go
 ```
 
-### 2. Test API Endpoints
-```bash
-# Start the server
-go run ./cmd/keylib-api
+### Request/Response
+- [ ] DTOs defined in `api/dto/`
+- [ ] Swagger annotations on handlers
+- [ ] Proper error responses
 
-# Test endpoints via Swagger UI or curl
-curl http://localhost:8080/health
-```
+## For Account Package Changes
 
-## For keylib Changes
+### Backend Compatibility
+- [ ] Test with Hedera backend
+- [ ] Test with Kafka backend (if applicable)
+- [ ] Ensure interface compliance
 
-### 1. Update Documentation
-- Update godoc comments for new/changed functions
-- Update `doc.go` if adding new major features
-- Update `README.md` or `IMPLEMENTATION_MAPPING.md` if needed
+### Serialization
+- [ ] JSON marshaling/unmarshaling works
+- [ ] Backward compatibility maintained
 
-### 2. Thread Safety Considerations
-- New types should be immutable after construction
-- Document any non-thread-safe methods
-- CPU-intensive operations should be noted
-
-### 3. Error Handling
-- Use appropriate ErrorKind
-- Include operation name in errors
-- Provide helpful error details
-
-## Quick Verification Commands
+## Final Steps
 
 ```bash
-# One-liner to verify before commit
-gofmt -w . && go vet ./... && go test ./... && go build ./...
+# One final verification
+go build ./...
+go test ./... -v
+go vet ./...
+
+# If all passes, commit
+git add <files>
+git commit -m "descriptive message"
 ```

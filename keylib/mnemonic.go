@@ -17,6 +17,34 @@ const DefaultDerivationPath = "m/44'/60'/0'/0/0"
 // ValidMnemonicWordCounts are the valid word counts for BIP39 mnemonics.
 var ValidMnemonicWordCounts = []int{12, 15, 18, 21, 24}
 
+// mnemonicConfig holds configuration for mnemonic key derivation.
+type mnemonicConfig struct {
+	passphrase string
+	path       string
+}
+
+// MnemonicOption configures mnemonic key derivation.
+// Use with PrivateKeyFromMnemonic to customize derivation parameters.
+type MnemonicOption func(*mnemonicConfig)
+
+// WithPassphrase sets the BIP39 passphrase for key derivation.
+// The passphrase provides additional entropy and security.
+// Default is empty string (no passphrase).
+func WithPassphrase(passphrase string) MnemonicOption {
+	return func(c *mnemonicConfig) {
+		c.passphrase = passphrase
+	}
+}
+
+// WithDerivationPath sets a custom BIP32 derivation path.
+// Path format: "m/44'/60'/0'/0/0" (apostrophe indicates hardened derivation).
+// Default: DefaultDerivationPath ("m/44'/60'/0'/0/0")
+func WithDerivationPath(path string) MnemonicOption {
+	return func(c *mnemonicConfig) {
+		c.path = path
+	}
+}
+
 // GenerateMnemonic generates a new BIP39 mnemonic phrase.
 // wordCount must be 12, 15, 18, 21, or 24.
 //
@@ -49,32 +77,74 @@ func GenerateMnemonic(wordCount int) (string, error) {
 }
 
 // PrivateKeyFromMnemonic derives a private key from a BIP39 mnemonic.
-// Uses the default derivation path (m/44'/60'/0'/0/0) and empty passphrase.
-func PrivateKeyFromMnemonic(mnemonic string) (NeuronPrivateKey, error) {
-	return PrivateKeyFromMnemonicWithOptions(mnemonic, "", DefaultDerivationPath)
-}
-
-// PrivateKeyFromMnemonicWithPath derives a private key using a custom derivation path.
-// Uses empty passphrase.
-func PrivateKeyFromMnemonicWithPath(mnemonic, path string) (NeuronPrivateKey, error) {
-	return PrivateKeyFromMnemonicWithOptions(mnemonic, "", path)
-}
-
-// PrivateKeyFromMnemonicWithPassphrase derives a private key using a BIP39 passphrase.
-// Uses the default derivation path.
-func PrivateKeyFromMnemonicWithPassphrase(mnemonic, passphrase string) (NeuronPrivateKey, error) {
-	return PrivateKeyFromMnemonicWithOptions(mnemonic, passphrase, DefaultDerivationPath)
-}
-
-// PrivateKeyFromMnemonicWithOptions derives a private key with full control over options.
-// This is the most flexible mnemonic derivation function.
+// Use functional options to customize passphrase and derivation path.
+//
+// Examples:
+//
+//	// Default: empty passphrase, Ethereum derivation path
+//	key, err := PrivateKeyFromMnemonic(mnemonic)
+//
+//	// With passphrase
+//	key, err := PrivateKeyFromMnemonic(mnemonic, WithPassphrase("my secret"))
+//
+//	// With custom derivation path
+//	key, err := PrivateKeyFromMnemonic(mnemonic, WithDerivationPath("m/44'/0'/0'/0/0"))
+//
+//	// With both passphrase and custom path
+//	key, err := PrivateKeyFromMnemonic(mnemonic,
+//	    WithPassphrase("my secret"),
+//	    WithDerivationPath("m/44'/0'/0'/0/0"),
+//	)
 //
 // # Concurrency
 //
 // This function is safe for concurrent use. No blocking I/O.
 // Note: BIP32 derivation involves multiple HMAC-SHA512 operations,
 // which is CPU-bound but typically fast (<10ms for standard paths).
+func PrivateKeyFromMnemonic(mnemonic string, opts ...MnemonicOption) (NeuronPrivateKey, error) {
+	cfg := &mnemonicConfig{
+		path: DefaultDerivationPath,
+	}
+	for _, opt := range opts {
+		opt(cfg)
+	}
+	return privateKeyFromMnemonicInternal(mnemonic, cfg.passphrase, cfg.path)
+}
+
+// PrivateKeyFromMnemonicWithPath derives a private key using a custom derivation path.
+// Uses empty passphrase.
+//
+// Deprecated: Use PrivateKeyFromMnemonic with WithDerivationPath option instead.
+//
+//	key, err := PrivateKeyFromMnemonic(mnemonic, WithDerivationPath(path))
+func PrivateKeyFromMnemonicWithPath(mnemonic, path string) (NeuronPrivateKey, error) {
+	return PrivateKeyFromMnemonic(mnemonic, WithDerivationPath(path))
+}
+
+// PrivateKeyFromMnemonicWithPassphrase derives a private key using a BIP39 passphrase.
+// Uses the default derivation path.
+//
+// Deprecated: Use PrivateKeyFromMnemonic with WithPassphrase option instead.
+//
+//	key, err := PrivateKeyFromMnemonic(mnemonic, WithPassphrase(passphrase))
+func PrivateKeyFromMnemonicWithPassphrase(mnemonic, passphrase string) (NeuronPrivateKey, error) {
+	return PrivateKeyFromMnemonic(mnemonic, WithPassphrase(passphrase))
+}
+
+// PrivateKeyFromMnemonicWithOptions derives a private key with full control over options.
+//
+// Deprecated: Use PrivateKeyFromMnemonic with options instead.
+//
+//	key, err := PrivateKeyFromMnemonic(mnemonic,
+//	    WithPassphrase(passphrase),
+//	    WithDerivationPath(path),
+//	)
 func PrivateKeyFromMnemonicWithOptions(mnemonic, passphrase, path string) (NeuronPrivateKey, error) {
+	return PrivateKeyFromMnemonic(mnemonic, WithPassphrase(passphrase), WithDerivationPath(path))
+}
+
+// privateKeyFromMnemonicInternal is the internal implementation for mnemonic derivation.
+func privateKeyFromMnemonicInternal(mnemonic, passphrase, path string) (NeuronPrivateKey, error) {
 	const op = "PrivateKeyFromMnemonic"
 
 	// Validate mnemonic

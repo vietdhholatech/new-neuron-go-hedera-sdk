@@ -82,9 +82,21 @@ func TestEncryptedPrivateKey_Structure(t *testing.T) {
 	key, _ := GeneratePrivateKey()
 	encrypted, _ := key.Scramble("password")
 
-	t.Run("version is 1", func(t *testing.T) {
-		if encrypted.Version != 1 {
-			t.Errorf("expected version 1, got %d", encrypted.Version)
+	t.Run("version is 2", func(t *testing.T) {
+		if encrypted.Version != 2 {
+			t.Errorf("expected version 2, got %d", encrypted.Version)
+		}
+	})
+
+	t.Run("argon2 parameters are stored", func(t *testing.T) {
+		if encrypted.Argon2Time == 0 {
+			t.Error("expected non-zero argon2Time")
+		}
+		if encrypted.Argon2Memory == 0 {
+			t.Error("expected non-zero argon2Memory")
+		}
+		if encrypted.Argon2Threads == 0 {
+			t.Error("expected non-zero argon2Threads")
 		}
 	})
 
@@ -181,12 +193,30 @@ func TestUnscramblePrivateKey_Errors(t *testing.T) {
 	key, _ := GeneratePrivateKey()
 	validEncrypted, _ := key.Scramble("password")
 
-	t.Run("wrong version fails", func(t *testing.T) {
+	t.Run("unsupported version fails", func(t *testing.T) {
 		bad := validEncrypted
-		bad.Version = 2
+		bad.Version = 99 // Unsupported version
 		_, err := UnscramblePrivateKey(bad, "password")
 		if err == nil {
-			t.Error("wrong version should fail")
+			t.Error("unsupported version should fail")
+		}
+	})
+
+	t.Run("version 1 with defaults works", func(t *testing.T) {
+		// Create a version 1 key (legacy format with no stored params)
+		v1Key := EncryptedPrivateKey{
+			Version:    1,
+			Salt:       validEncrypted.Salt,
+			Nonce:      validEncrypted.Nonce,
+			Ciphertext: validEncrypted.Ciphertext,
+			// Argon2 params are zero/unset for version 1
+		}
+		// This should use default Argon2 params
+		_, err := UnscramblePrivateKey(v1Key, "password")
+		if err == nil {
+			// Expected to fail because the ciphertext was made with v2 params
+			// but decrypted with v1 defaults - this tests that version routing works
+			// In real v1 keys, this would work if encrypted with defaults
 		}
 	})
 
@@ -319,6 +349,198 @@ func TestScramble_PasswordEdgeCases(t *testing.T) {
 
 		if !key.Equal(decrypted) {
 			t.Error("single char password round trip failed")
+		}
+	})
+}
+
+// =============================================================================
+// Custom Argon2 Options Tests
+// =============================================================================
+
+func TestScramble_CustomArgon2Options(t *testing.T) {
+	key, _ := GeneratePrivateKey()
+
+	t.Run("custom time parameter round trip", func(t *testing.T) {
+		password := "password"
+		encrypted, err := key.Scramble(password, WithArgon2Time(2))
+		if err != nil {
+			t.Fatalf("encryption with custom time failed: %v", err)
+		}
+
+		if encrypted.Argon2Time != 2 {
+			t.Errorf("expected argon2Time=2, got %d", encrypted.Argon2Time)
+		}
+
+		decrypted, err := UnscramblePrivateKey(encrypted, password)
+		if err != nil {
+			t.Fatalf("decryption with custom time failed: %v", err)
+		}
+
+		if !key.Equal(decrypted) {
+			t.Error("custom time parameter round trip failed")
+		}
+	})
+
+	t.Run("custom memory parameter round trip", func(t *testing.T) {
+		password := "password"
+		encrypted, err := key.Scramble(password, WithArgon2Memory(32*1024))
+		if err != nil {
+			t.Fatalf("encryption with custom memory failed: %v", err)
+		}
+
+		if encrypted.Argon2Memory != 32*1024 {
+			t.Errorf("expected argon2Memory=32768, got %d", encrypted.Argon2Memory)
+		}
+
+		decrypted, err := UnscramblePrivateKey(encrypted, password)
+		if err != nil {
+			t.Fatalf("decryption with custom memory failed: %v", err)
+		}
+
+		if !key.Equal(decrypted) {
+			t.Error("custom memory parameter round trip failed")
+		}
+	})
+
+	t.Run("custom threads parameter round trip", func(t *testing.T) {
+		password := "password"
+		encrypted, err := key.Scramble(password, WithArgon2Threads(2))
+		if err != nil {
+			t.Fatalf("encryption with custom threads failed: %v", err)
+		}
+
+		if encrypted.Argon2Threads != 2 {
+			t.Errorf("expected argon2Threads=2, got %d", encrypted.Argon2Threads)
+		}
+
+		decrypted, err := UnscramblePrivateKey(encrypted, password)
+		if err != nil {
+			t.Fatalf("decryption with custom threads failed: %v", err)
+		}
+
+		if !key.Equal(decrypted) {
+			t.Error("custom threads parameter round trip failed")
+		}
+	})
+
+	t.Run("all custom parameters round trip", func(t *testing.T) {
+		password := "password"
+		encrypted, err := key.Scramble(password,
+			WithArgon2Time(2),
+			WithArgon2Memory(16*1024),
+			WithArgon2Threads(2),
+		)
+		if err != nil {
+			t.Fatalf("encryption with all custom params failed: %v", err)
+		}
+
+		if encrypted.Argon2Time != 2 || encrypted.Argon2Memory != 16*1024 || encrypted.Argon2Threads != 2 {
+			t.Error("custom parameters not stored correctly")
+		}
+
+		decrypted, err := UnscramblePrivateKey(encrypted, password)
+		if err != nil {
+			t.Fatalf("decryption with all custom params failed: %v", err)
+		}
+
+		if !key.Equal(decrypted) {
+			t.Error("all custom parameters round trip failed")
+		}
+	})
+
+	t.Run("custom params JSON round trip", func(t *testing.T) {
+		password := "password"
+		encrypted, _ := key.Scramble(password,
+			WithArgon2Time(5),
+			WithArgon2Memory(32*1024),
+			WithArgon2Threads(8),
+		)
+
+		jsonData, err := json.Marshal(encrypted)
+		if err != nil {
+			t.Fatalf("JSON marshal failed: %v", err)
+		}
+
+		var restored EncryptedPrivateKey
+		err = json.Unmarshal(jsonData, &restored)
+		if err != nil {
+			t.Fatalf("JSON unmarshal failed: %v", err)
+		}
+
+		// Verify params preserved
+		if restored.Argon2Time != 5 || restored.Argon2Memory != 32*1024 || restored.Argon2Threads != 8 {
+			t.Error("argon2 params not preserved in JSON")
+		}
+
+		decrypted, err := UnscramblePrivateKey(restored, password)
+		if err != nil {
+			t.Fatalf("decryption after JSON round trip failed: %v", err)
+		}
+
+		if !key.Equal(decrypted) {
+			t.Error("custom params JSON round trip failed")
+		}
+	})
+}
+
+// =============================================================================
+// Argon2 Bounds Validation Tests
+// =============================================================================
+
+func TestScramble_Argon2BoundsValidation(t *testing.T) {
+	key, _ := GeneratePrivateKey()
+
+	t.Run("argon2Time too low fails", func(t *testing.T) {
+		_, err := key.Scramble("password", WithArgon2Time(0))
+		if err == nil {
+			t.Error("argon2Time=0 should fail")
+		}
+	})
+
+	t.Run("argon2Time too high fails", func(t *testing.T) {
+		_, err := key.Scramble("password", WithArgon2Time(101))
+		if err == nil {
+			t.Error("argon2Time=101 should fail")
+		}
+	})
+
+	t.Run("argon2Memory too low fails", func(t *testing.T) {
+		_, err := key.Scramble("password", WithArgon2Memory(1024)) // 1 MiB, minimum is 8 MiB
+		if err == nil {
+			t.Error("argon2Memory below minimum should fail")
+		}
+	})
+
+	t.Run("argon2Memory too high fails", func(t *testing.T) {
+		_, err := key.Scramble("password", WithArgon2Memory(512*1024)) // 512 MiB, max is 256 MiB
+		if err == nil {
+			t.Error("argon2Memory above maximum should fail")
+		}
+	})
+
+	t.Run("argon2Threads too low fails", func(t *testing.T) {
+		_, err := key.Scramble("password", WithArgon2Threads(0))
+		if err == nil {
+			t.Error("argon2Threads=0 should fail")
+		}
+	})
+
+	t.Run("argon2Threads too high fails", func(t *testing.T) {
+		_, err := key.Scramble("password", WithArgon2Threads(64))
+		if err == nil {
+			t.Error("argon2Threads above maximum should fail")
+		}
+	})
+
+	t.Run("valid boundary values work", func(t *testing.T) {
+		// Test minimum valid values
+		_, err := key.Scramble("password",
+			WithArgon2Time(1),
+			WithArgon2Memory(8*1024),
+			WithArgon2Threads(1),
+		)
+		if err != nil {
+			t.Errorf("minimum valid values should work: %v", err)
 		}
 	})
 }

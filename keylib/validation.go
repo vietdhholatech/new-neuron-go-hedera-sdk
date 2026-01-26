@@ -14,9 +14,14 @@ var secp256k1N = secp256k1.S256().N
 
 // normalizeHex strips the "0x" or "0X" prefix and converts to lowercase.
 // Returns the normalized hex string.
+// Uses strings.CutPrefix (Go 1.20+) for explicit prefix handling.
 func normalizeHex(s string) string {
-	s = strings.TrimPrefix(s, "0x")
-	s = strings.TrimPrefix(s, "0X")
+	if after, found := strings.CutPrefix(s, "0x"); found {
+		return strings.ToLower(after)
+	}
+	if after, found := strings.CutPrefix(s, "0X"); found {
+		return strings.ToLower(after)
+	}
 	return strings.ToLower(s)
 }
 
