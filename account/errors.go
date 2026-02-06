@@ -28,6 +28,8 @@ const (
 	ErrKindZeroValue
 	// ErrKindInvalidHierarchy indicates invalid parent/child relationship.
 	ErrKindInvalidHierarchy
+	// ErrKindProhibitedField indicates a field is present that is not allowed.
+	ErrKindProhibitedField
 )
 
 // String returns a human-readable name for the error kind.
@@ -51,6 +53,8 @@ func (k AccountErrorKind) String() string {
 		return "ZeroValue"
 	case ErrKindInvalidHierarchy:
 		return "InvalidHierarchy"
+	case ErrKindProhibitedField:
+		return "ProhibitedField"
 	default:
 		return "Unknown"
 	}
@@ -176,6 +180,12 @@ func errZeroValue(op string, typeName string) *AccountError {
 // errInvalidHierarchy creates an error for invalid parent/child relationships.
 func errInvalidHierarchy(op string, reason string) *AccountError {
 	return newAccountError(op, ErrKindInvalidHierarchy, reason, nil)
+}
+
+// errProhibitedField creates an error for prohibited field presence.
+func errProhibitedField(op string, field, accountType string) *AccountError {
+	return newAccountError(op, ErrKindProhibitedField,
+		fmt.Sprintf("field %s is prohibited for %s accounts", field, accountType), nil)
 }
 
 // wrapAccountError wraps an existing error with additional context.

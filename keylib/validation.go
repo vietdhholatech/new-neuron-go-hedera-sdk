@@ -12,6 +12,11 @@ import (
 // Any valid private key scalar must be in range [1, N-1].
 var secp256k1N = secp256k1.S256().N
 
+// maxHexInputLen is the maximum length for hex string inputs.
+// Longest valid input: 0x + 130 chars (65-byte signature) = 132 chars.
+// We allow 256 to provide margin for future use cases while preventing DoS.
+const maxHexInputLen = 256
+
 // normalizeHex strips the "0x" or "0X" prefix and converts to lowercase.
 // Returns the normalized hex string.
 // Uses strings.CutPrefix (Go 1.20+) for explicit prefix handling.
@@ -46,6 +51,11 @@ func validateHexString(s string) (invalidPos int, invalidChar rune) {
 // decodeHexStrict decodes a hex string with strict validation.
 // It normalizes the input (strips 0x prefix) and validates all characters.
 func decodeHexStrict(op string, s string) ([]byte, error) {
+	// Reject oversized input before any processing to prevent DoS
+	if len(s) > maxHexInputLen {
+		return nil, errInvalidLength(op, maxHexInputLen, len(s), "hex characters (maximum)")
+	}
+
 	normalized := normalizeHex(s)
 
 	// Check for empty string
@@ -71,37 +81,6 @@ func decodeHexStrict(op string, s string) ([]byte, error) {
 	}
 
 	return bytes, nil
-}
-
-// isValidSecp256k1Scalar checks if bytes represent a valid secp256k1 private key scalar.
-// A valid scalar must be:
-// - Exactly 32 bytes
-// - Greater than 0
-// - Less than the curve order N
-func isValidSecp256k1Scalar(b []byte) bool {
-	if len(b) != 32 {
-		return false
-	}
-
-	// Check if all zeros
-	allZero := true
-	for _, v := range b {
-		if v != 0 {
-			allZero = false
-			break
-		}
-	}
-	if allZero {
-		return false
-	}
-
-	// Check if less than curve order N
-	scalar := new(big.Int).SetBytes(b)
-	if scalar.Cmp(secp256k1N) >= 0 {
-		return false
-	}
-
-	return true
 }
 
 // validatePrivateKeyBytes validates that bytes are a valid secp256k1 private key.
@@ -156,17 +135,6 @@ func validatePublicKeyBytes(op string, b []byte) error {
 	}
 
 	return nil
-}
-
-// isValidEVMAddressFormat checks if a string is a valid EVM address format.
-// Valid formats: 40 hex chars, or "0x" + 40 hex chars.
-func isValidEVMAddressFormat(s string) bool {
-	normalized := normalizeHex(s)
-	if len(normalized) != 40 {
-		return false
-	}
-	pos, _ := validateHexString(normalized)
-	return pos < 0
 }
 
 // padLeftZeros pads a byte slice with leading zeros to reach the target length.

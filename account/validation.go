@@ -26,7 +26,12 @@ func ValidateAccountType(t AccountType) error {
 // Parent accounts must have:
 //   - A valid (non-zero) public key
 //   - A valid DID
-func ValidateParentAccount(pubKey keylib.NeuronPublicKey, did NeuronDID) error {
+//
+// Parent accounts must NOT have:
+//   - Communication channels (stdIn, stdOut, stdErr)
+//   - A parent reference (parentPubKey)
+func ValidateParentAccount(pubKey keylib.NeuronPublicKey, did NeuronDID,
+	stdIn, stdOut, stdErr CommAddress, parentPubKey keylib.NeuronPublicKey) error {
 	const op = "ValidateParentAccount"
 
 	if pubKey.IsZero() {
@@ -41,6 +46,22 @@ func ValidateParentAccount(pubKey keylib.NeuronPublicKey, did NeuronDID) error {
 		return errValidation(op, "DID validation failed", err)
 	}
 
+	// Parent accounts must NOT have communication channels
+	if !stdIn.IsZero() {
+		return errProhibitedField(op, "stdIn", "Parent")
+	}
+	if !stdOut.IsZero() {
+		return errProhibitedField(op, "stdOut", "Parent")
+	}
+	if !stdErr.IsZero() {
+		return errProhibitedField(op, "stdErr", "Parent")
+	}
+
+	// Parent accounts must NOT have a parent reference
+	if !parentPubKey.IsZero() {
+		return errProhibitedField(op, "parentPubKey", "Parent")
+	}
+
 	return nil
 }
 
@@ -49,7 +70,12 @@ func ValidateParentAccount(pubKey keylib.NeuronPublicKey, did NeuronDID) error {
 //   - A valid (non-zero) public key
 //   - A valid (non-zero) parent public key
 //   - Different public keys for self and parent
-func ValidateChildAccount(pubKey, parentPubKey keylib.NeuronPublicKey) error {
+//   - All three communication channels (stdIn, stdOut, stdErr)
+//
+// Child accounts must NOT have:
+//   - A DID (DIDs are reserved for Parent accounts)
+func ValidateChildAccount(pubKey, parentPubKey keylib.NeuronPublicKey,
+	stdIn, stdOut, stdErr CommAddress, did NeuronDID) error {
 	const op = "ValidateChildAccount"
 
 	if pubKey.IsZero() {
@@ -63,6 +89,68 @@ func ValidateChildAccount(pubKey, parentPubKey keylib.NeuronPublicKey) error {
 	// A child cannot be its own parent
 	if pubKey.Equal(parentPubKey) {
 		return errInvalidHierarchy(op, "child public key cannot equal parent public key")
+	}
+
+	// Child accounts must have all three communication channels
+	if stdIn.IsZero() {
+		return errMissingRequired(op, "stdIn")
+	}
+	if stdOut.IsZero() {
+		return errMissingRequired(op, "stdOut")
+	}
+	if stdErr.IsZero() {
+		return errMissingRequired(op, "stdErr")
+	}
+
+	// Child accounts must NOT have a DID
+	if did != nil {
+		return errProhibitedField(op, "DID", "Child")
+	}
+
+	return nil
+}
+
+// ValidateSharedAccount validates the requirements for a Shared account.
+// Shared accounts must have:
+//   - A valid (non-zero) MultisigKey
+//
+// Shared accounts must NOT have:
+//   - A DID (DIDs are reserved for Parent accounts)
+//   - Communication channels (stdIn, stdOut, stdErr)
+//   - A parent reference (parentPubKey)
+func ValidateSharedAccount(multisigKey *keylib.MultisigKey,
+	did NeuronDID, stdIn, stdOut, stdErr CommAddress,
+	parentPubKey keylib.NeuronPublicKey) error {
+	const op = "ValidateSharedAccount"
+
+	// Shared accounts must have a valid MultisigKey
+	if multisigKey == nil || multisigKey.IsZero() {
+		return errMissingRequired(op, "MultisigKey")
+	}
+
+	if err := multisigKey.Validate(); err != nil {
+		return errValidation(op, "MultisigKey validation failed", err)
+	}
+
+	// Shared accounts must NOT have a DID
+	if did != nil {
+		return errProhibitedField(op, "DID", "Shared")
+	}
+
+	// Shared accounts must NOT have communication channels
+	if !stdIn.IsZero() {
+		return errProhibitedField(op, "stdIn", "Shared")
+	}
+	if !stdOut.IsZero() {
+		return errProhibitedField(op, "stdOut", "Shared")
+	}
+	if !stdErr.IsZero() {
+		return errProhibitedField(op, "stdErr", "Shared")
+	}
+
+	// Shared accounts must NOT have a parent reference
+	if !parentPubKey.IsZero() {
+		return errProhibitedField(op, "parentPubKey", "Shared")
 	}
 
 	return nil
@@ -135,6 +223,18 @@ func ValidateReachableAddrForAccount(addr ReachableAddr, expectedPeerID keylib.P
 // ValidateReachableAddrs validates a collection of ReachableAddrs.
 func ValidateReachableAddrs(addrs ReachableAddrs, expectedPeerID keylib.PeerID) error {
 	return addrs.ValidateAll(expectedPeerID)
+}
+
+// ValidateCurrencySymbol checks that currency symbol is present when a ledger attachment exists.
+// The spec (FR-020) requires each account to have a currency symbol. This validation enforces
+// the requirement conditionally: currency is mandatory when attached to a ledger, optional otherwise.
+func ValidateCurrencySymbol(currencySymbol string, ledgerAttachment *LedgerAttachment) error {
+	const op = "ValidateCurrencySymbol"
+
+	if ledgerAttachment != nil && currencySymbol == "" {
+		return errMissingRequired(op, "currencySymbol (required when ledger is attached)")
+	}
+	return nil
 }
 
 // ValidationResult holds the results of validating a NeuronAccount.
@@ -238,14 +338,24 @@ func (v *AccountValidator) ValidateAccountType(t AccountType) *AccountValidator 
 }
 
 // ValidateParentRequirements validates requirements specific to Parent accounts.
-func (v *AccountValidator) ValidateParentRequirements(pubKey keylib.NeuronPublicKey, did NeuronDID) *AccountValidator {
-	v.result.AddError(ValidateParentAccount(pubKey, did))
+func (v *AccountValidator) ValidateParentRequirements(pubKey keylib.NeuronPublicKey, did NeuronDID,
+	stdIn, stdOut, stdErr CommAddress, parentPubKey keylib.NeuronPublicKey) *AccountValidator {
+	v.result.AddError(ValidateParentAccount(pubKey, did, stdIn, stdOut, stdErr, parentPubKey))
 	return v
 }
 
 // ValidateChildRequirements validates requirements specific to Child accounts.
-func (v *AccountValidator) ValidateChildRequirements(pubKey, parentPubKey keylib.NeuronPublicKey) *AccountValidator {
-	v.result.AddError(ValidateChildAccount(pubKey, parentPubKey))
+func (v *AccountValidator) ValidateChildRequirements(pubKey, parentPubKey keylib.NeuronPublicKey,
+	stdIn, stdOut, stdErr CommAddress, did NeuronDID) *AccountValidator {
+	v.result.AddError(ValidateChildAccount(pubKey, parentPubKey, stdIn, stdOut, stdErr, did))
+	return v
+}
+
+// ValidateSharedRequirements validates requirements specific to Shared accounts.
+func (v *AccountValidator) ValidateSharedRequirements(multisigKey *keylib.MultisigKey,
+	did NeuronDID, stdIn, stdOut, stdErr CommAddress,
+	parentPubKey keylib.NeuronPublicKey) *AccountValidator {
+	v.result.AddError(ValidateSharedAccount(multisigKey, did, stdIn, stdOut, stdErr, parentPubKey))
 	return v
 }
 

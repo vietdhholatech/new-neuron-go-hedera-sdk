@@ -78,10 +78,19 @@ func NewCustomAddress(kind CommAddressKind, locator string) (CommAddress, error)
 // NewCommAddress creates a CommAddress with the specified backend kind.
 //
 // If the kind corresponds to a registered backend, the locator is validated
-// and normalized according to that backend's rules.
+// and normalized according to that backend's rules via backend.ParseLocator().
 //
-// If the kind is not registered, the address is created without validation
-// (for forward compatibility with backends that may be registered later).
+// # Forward Compatibility
+//
+// If the kind is not registered, the address is created without validation.
+// This design allows applications to work with backend types that may be
+// added in future versions without requiring code changes. The only
+// requirement for unregistered backends is a non-empty locator string.
+//
+// This forward compatibility enables:
+//   - Deserializing accounts with future backend types
+//   - Supporting custom third-party backends
+//   - Gradual rollout of new communication technologies
 //
 // Returns an error if:
 //   - The backend is registered and the locator is invalid

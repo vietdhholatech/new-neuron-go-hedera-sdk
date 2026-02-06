@@ -2,15 +2,17 @@ package account
 
 import (
 	"fmt"
+	"math/big"
 
 	"github.com/aspect-build/neuron-go-hedera-sdk/keylib"
 )
 
 // AccountBuilder provides a fluent API for constructing NeuronAccount instances.
-// Use NewParentAccountBuilder or NewChildAccountBuilder to create a builder.
+// Use NewParentAccountBuilder, NewChildAccountBuilder, or NewSharedAccountBuilder to create a builder.
 type AccountBuilder struct {
 	// Core identity
 	publicKey    keylib.NeuronPublicKey
+	multisigKey  *keylib.MultisigKey
 	accountType  AccountType
 	did          NeuronDID
 	parentPubKey keylib.NeuronPublicKey
@@ -22,6 +24,15 @@ type AccountBuilder struct {
 
 	// Reachable addresses
 	reachableAddrs []ReachableAddr
+
+	// Financial fields
+	currencySymbol    string
+	creditBalance     *big.Int
+	balanceAllocation *big.Int
+	balance           *big.Int
+
+	// Ledger attachment
+	ledgerAttachment *LedgerAttachment
 
 	// Build errors
 	errors []error
@@ -62,6 +73,29 @@ func NewChildAccountBuilder(publicKey, parentPubKey keylib.NeuronPublicKey) *Acc
 	}
 	if parentPubKey.IsZero() {
 		b.addError(errMissingRequired("NewChildAccountBuilder", "parent public key"))
+	}
+
+	return b
+}
+
+// NewSharedAccountBuilder creates a builder for a Shared (multisig) NeuronAccount.
+// Shared accounts require a MultisigKey with threshold configuration.
+// Shared accounts do NOT have:
+//   - A single public key (they use MultisigKey instead)
+//   - A DID document
+//   - Communication channels (stdIn, stdOut, stdErr)
+//   - A parent reference
+func NewSharedAccountBuilder(multisigKey keylib.MultisigKey) *AccountBuilder {
+	b := &AccountBuilder{
+		multisigKey: &multisigKey,
+		accountType: AccountTypeShared,
+	}
+
+	// Validate required fields upfront
+	if multisigKey.IsZero() {
+		b.addError(errZeroValue("NewSharedAccountBuilder", "MultisigKey"))
+	} else if err := multisigKey.Validate(); err != nil {
+		b.addError(wrapAccountError("NewSharedAccountBuilder", ErrKindValidation, "invalid MultisigKey", err))
 	}
 
 	return b
@@ -250,6 +284,70 @@ func (b *AccountBuilder) WithReachableAddrValidated(multiaddr string) *AccountBu
 	return b
 }
 
+// === Financial Methods ===
+
+// WithCurrencySymbol sets the currency symbol for balance tracking.
+func (b *AccountBuilder) WithCurrencySymbol(symbol string) *AccountBuilder {
+	b.currencySymbol = symbol
+	return b
+}
+
+// WithCreditBalance sets the credit balance for Parent accounts.
+// Returns error if called on non-Parent account types.
+func (b *AccountBuilder) WithCreditBalance(balance *big.Int) *AccountBuilder {
+	if b.accountType != AccountTypeParent {
+		b.addError(errInvalidAccount("WithCreditBalance", "credit balance is only valid for Parent accounts"))
+		return b
+	}
+	if balance != nil && balance.Sign() < 0 {
+		b.addError(errInvalidAccount("WithCreditBalance", "credit balance cannot be negative"))
+		return b
+	}
+	b.creditBalance = balance
+	return b
+}
+
+// WithBalanceAllocation sets the balance allocation for Child accounts.
+// Returns error if called on non-Child account types.
+func (b *AccountBuilder) WithBalanceAllocation(allocation *big.Int) *AccountBuilder {
+	if b.accountType != AccountTypeChild {
+		b.addError(errInvalidAccount("WithBalanceAllocation", "balance allocation is only valid for Child accounts"))
+		return b
+	}
+	if allocation != nil && allocation.Sign() < 0 {
+		b.addError(errInvalidAccount("WithBalanceAllocation", "balance allocation cannot be negative"))
+		return b
+	}
+	b.balanceAllocation = allocation
+	return b
+}
+
+// WithBalance sets the balance for Shared accounts.
+// Returns error if called on non-Shared account types.
+func (b *AccountBuilder) WithBalance(balance *big.Int) *AccountBuilder {
+	if b.accountType != AccountTypeShared {
+		b.addError(errInvalidAccount("WithBalance", "balance is only valid for Shared accounts"))
+		return b
+	}
+	if balance != nil && balance.Sign() < 0 {
+		b.addError(errInvalidAccount("WithBalance", "balance cannot be negative"))
+		return b
+	}
+	b.balance = balance
+	return b
+}
+
+// WithLedgerAttachment sets the ledger attachment for the account.
+func (b *AccountBuilder) WithLedgerAttachment(ledgerID, address string) *AccountBuilder {
+	attachment, err := NewLedgerAttachment(ledgerID, address)
+	if err != nil {
+		b.addError(wrapAccountError("WithLedgerAttachment", ErrKindValidation, "invalid ledger attachment", err))
+		return b
+	}
+	b.ledgerAttachment = attachment
+	return b
+}
+
 // Build constructs the NeuronAccount.
 // Returns an error if any validation fails.
 func (b *AccountBuilder) Build() (NeuronAccount, error) {
@@ -262,32 +360,59 @@ func (b *AccountBuilder) Build() (NeuronAccount, error) {
 	}
 
 	// Final validation based on account type
+	var peerID keylib.PeerID
+	var evmAddress keylib.EVMAddress
+
 	switch b.accountType {
 	case AccountTypeParent:
-		if err := ValidateParentAccount(b.publicKey, b.did); err != nil {
+		if err := ValidateParentAccount(b.publicKey, b.did, b.stdIn, b.stdOut, b.stdErr, b.parentPubKey); err != nil {
 			return NeuronAccount{}, wrapAccountError(op, ErrKindValidation, "parent validation failed", err)
 		}
 		// Validate DID matches public key
 		if err := ValidateDIDMatchesKey(b.did, b.publicKey); err != nil {
 			return NeuronAccount{}, wrapAccountError(op, ErrKindInvalidDID, "DID-key mismatch", err)
 		}
+		// Derive identifiers from public key
+		var err error
+		peerID, err = b.publicKey.PeerID()
+		if err != nil {
+			return NeuronAccount{}, wrapAccountError(op, ErrKindValidation, "failed to derive PeerID", err)
+		}
+		evmAddress = b.publicKey.EVMAddress()
+
 	case AccountTypeChild:
-		if err := ValidateChildAccount(b.publicKey, b.parentPubKey); err != nil {
+		if err := ValidateChildAccount(b.publicKey, b.parentPubKey, b.stdIn, b.stdOut, b.stdErr, b.did); err != nil {
 			return NeuronAccount{}, wrapAccountError(op, ErrKindValidation, "child validation failed", err)
 		}
+		// Derive identifiers from public key
+		var err error
+		peerID, err = b.publicKey.PeerID()
+		if err != nil {
+			return NeuronAccount{}, wrapAccountError(op, ErrKindValidation, "failed to derive PeerID", err)
+		}
+		evmAddress = b.publicKey.EVMAddress()
+
+	case AccountTypeShared:
+		if err := ValidateSharedAccount(b.multisigKey, b.did, b.stdIn, b.stdOut, b.stdErr, b.parentPubKey); err != nil {
+			return NeuronAccount{}, wrapAccountError(op, ErrKindValidation, "shared validation failed", err)
+		}
+		// Shared accounts must NOT have single public key
+		if !b.publicKey.IsZero() {
+			return NeuronAccount{}, errInvalidAccount(op, "shared accounts must not have single public key")
+		}
+		// Shared accounts don't derive PeerID/EVMAddress from single key
+		// They remain zero values
+
 	default:
 		return NeuronAccount{}, errInvalidAccount(op, "invalid account type")
 	}
 
-	// Derive identifiers from public key
-	peerID, err := b.publicKey.PeerID()
-	if err != nil {
-		return NeuronAccount{}, wrapAccountError(op, ErrKindValidation, "failed to derive PeerID", err)
-	}
-	evmAddress := b.publicKey.EVMAddress()
-
-	// Validate all reachable addresses have matching PeerID
+	// Validate all reachable addresses have matching PeerID (only for non-Shared accounts)
 	for i, addr := range b.reachableAddrs {
+		if peerID.IsZero() {
+			// Shared accounts cannot have reachable addresses (no PeerID)
+			return NeuronAccount{}, errInvalidAccount(op, "shared accounts cannot have reachable addresses")
+		}
 		if err := addr.ValidateForAccount(peerID); err != nil {
 			return NeuronAccount{}, wrapAccountError(op, ErrKindPeerIDMismatch,
 				fmt.Sprintf("reachable address at index %d has wrong PeerID", i), err)
@@ -296,16 +421,22 @@ func (b *AccountBuilder) Build() (NeuronAccount, error) {
 
 	// Construct the account
 	account := NeuronAccount{
-		publicKey:      b.publicKey,
-		peerID:         peerID,
-		evmAddress:     evmAddress,
-		accountType:    b.accountType,
-		did:            b.did,
-		parentPubKey:   b.parentPubKey,
-		stdIn:          b.stdIn,
-		stdOut:         b.stdOut,
-		stdErr:         b.stdErr,
-		reachableAddrs: NewReachableAddrs(b.reachableAddrs...),
+		publicKey:         b.publicKey,
+		multisigKey:       b.multisigKey,
+		peerID:            peerID,
+		evmAddress:        evmAddress,
+		accountType:       b.accountType,
+		did:               b.did,
+		parentPubKey:      b.parentPubKey,
+		stdIn:             b.stdIn,
+		stdOut:            b.stdOut,
+		stdErr:            b.stdErr,
+		reachableAddrs:    NewReachableAddrs(b.reachableAddrs...),
+		currencySymbol:    b.currencySymbol,
+		creditBalance:     b.creditBalance,
+		balanceAllocation: b.balanceAllocation,
+		balance:           b.balance,
+		ledgerAttachment:  b.ledgerAttachment,
 	}
 
 	return account, nil

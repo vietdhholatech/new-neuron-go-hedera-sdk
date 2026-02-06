@@ -107,3 +107,50 @@ type ServiceEndpoint struct {
 
 // DIDMethodKey is the did:key method - self-describing, derived from public key.
 const DIDMethodKey = "key"
+
+// DIDParser is a function that parses a DID string into a NeuronDID.
+type DIDParser func(didString string) (NeuronDID, error)
+
+// didParsers is a registry of DID parsers by method.
+var didParsers = make(map[string]DIDParser)
+
+// RegisterDIDParser registers a parser for a DID method.
+// This allows the account package to parse different DID methods dynamically.
+func RegisterDIDParser(method string, parser DIDParser) {
+	didParsers[method] = parser
+}
+
+// ParseDID parses a DID string into a NeuronDID using the registered parser.
+// Returns an error if the DID method is not supported or the DID is invalid.
+func ParseDID(didString string) (NeuronDID, error) {
+	const op = "ParseDID"
+
+	// Extract method from DID string
+	// Format: did:<method>:<method-specific-id>
+	if len(didString) < 7 || didString[:4] != "did:" {
+		return nil, errInvalidDID(op, "invalid DID format, expected 'did:' prefix")
+	}
+
+	// Find the method portion
+	rest := didString[4:]
+	colonIdx := -1
+	for i, c := range rest {
+		if c == ':' {
+			colonIdx = i
+			break
+		}
+	}
+	if colonIdx < 1 {
+		return nil, errInvalidDID(op, "invalid DID format, method not found")
+	}
+
+	method := rest[:colonIdx]
+
+	// Look up parser
+	parser, ok := didParsers[method]
+	if !ok {
+		return nil, errInvalidDID(op, "unsupported DID method: "+method)
+	}
+
+	return parser(didString)
+}

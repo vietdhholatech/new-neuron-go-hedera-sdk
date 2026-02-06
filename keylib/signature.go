@@ -7,6 +7,10 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
+// secp256k1HalfN is N/2, used for EIP-2 low-S normalization.
+// Signatures with S > N/2 are malleable; we normalize them to S <= N/2.
+var secp256k1HalfN = new(big.Int).Rsh(secp256k1.S256().N, 1)
+
 // Signature represents an ECDSA signature with recovery ID.
 // Format: [R (32 bytes) || S (32 bytes) || V (1 byte)] = 65 bytes total.
 //
@@ -46,6 +50,9 @@ func ParseSignature(s string) (Signature, error) {
 		return Signature{}, errInvalidFormat(op, "invalid recovery ID (V); must be 0, 1, 27, or 28")
 	}
 
+	// Normalize to low-S (EIP-2)
+	sig.normalizeToLowS()
+
 	return sig, nil
 }
 
@@ -70,6 +77,9 @@ func SignatureFromBytes(b []byte) (Signature, error) {
 		return Signature{}, errInvalidFormat(op, "invalid recovery ID (V); must be 0, 1, 27, or 28")
 	}
 
+	// Normalize to low-S (EIP-2)
+	sig.normalizeToLowS()
+
 	return sig, nil
 }
 
@@ -90,7 +100,24 @@ func signatureFromRSV(r, s *big.Int, v byte) Signature {
 	}
 	sig.data[64] = v
 
+	// Normalize to low-S (EIP-2)
+	sig.normalizeToLowS()
+
 	return sig
+}
+
+// normalizeToLowS ensures the signature's S value is in the lower half
+// of the curve order (EIP-2 compliance). This prevents signature malleability.
+// If s > N/2, it is replaced with N - s and V is flipped.
+func (sig *Signature) normalizeToLowS() {
+	s := new(big.Int).SetBytes(sig.data[32:64])
+	if s.Cmp(secp256k1HalfN) > 0 {
+		// Replace S with N - S
+		s.Sub(secp256k1N, s)
+		copy(sig.data[32:64], padLeftZeros(s.Bytes(), 32))
+		// Flip V: 0→1 or 1→0
+		sig.data[64] ^= 1
+	}
 }
 
 // IsZero returns true if this is a zero-value signature.

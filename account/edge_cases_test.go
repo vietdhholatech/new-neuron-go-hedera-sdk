@@ -917,23 +917,25 @@ func TestValidateDIDMatchesKey_EdgeCases(t *testing.T) {
 }
 
 func TestValidateParentAccount_EdgeCases(t *testing.T) {
+	var zeroComm CommAddress
+	var zeroPubKey keylib.NeuronPublicKey
+
 	t.Run("nil DID for parent", func(t *testing.T) {
 		privKey, _ := keylib.GeneratePrivateKey()
 		pubKey := privKey.PublicKey()
 
-		err := ValidateParentAccount(pubKey, nil)
+		err := ValidateParentAccount(pubKey, nil, zeroComm, zeroComm, zeroComm, zeroPubKey)
 		if err == nil {
 			t.Error("ValidateParentAccount should fail for nil DID")
 		}
 	})
 
 	t.Run("zero public key for parent", func(t *testing.T) {
-		var zeroPubKey keylib.NeuronPublicKey
 		privKey, _ := keylib.GeneratePrivateKey()
 		pubKey := privKey.PublicKey()
 		did := newConcurrentMockDID(pubKey)
 
-		err := ValidateParentAccount(zeroPubKey, did)
+		err := ValidateParentAccount(zeroPubKey, did, zeroComm, zeroComm, zeroComm, zeroPubKey)
 		if err == nil {
 			t.Error("ValidateParentAccount should fail for zero public key")
 		}
@@ -941,11 +943,20 @@ func TestValidateParentAccount_EdgeCases(t *testing.T) {
 }
 
 func TestValidateChildAccount_EdgeCases(t *testing.T) {
+	// Helper function to create required comm addresses for child accounts
+	createCommAddrs := func() (CommAddress, CommAddress, CommAddress) {
+		stdIn, _ := NewCommAddress(HederaTopicKind, "0.0.111")
+		stdOut, _ := NewCommAddress(HederaTopicKind, "0.0.222")
+		stdErr, _ := NewCommAddress(HederaTopicKind, "0.0.333")
+		return stdIn, stdOut, stdErr
+	}
+
 	t.Run("same child and parent key", func(t *testing.T) {
 		privKey, _ := keylib.GeneratePrivateKey()
 		pubKey := privKey.PublicKey()
+		stdIn, stdOut, stdErr := createCommAddrs()
 
-		err := ValidateChildAccount(pubKey, pubKey)
+		err := ValidateChildAccount(pubKey, pubKey, stdIn, stdOut, stdErr, nil)
 		if err == nil {
 			t.Error("ValidateChildAccount should fail when child equals parent")
 		}
@@ -955,8 +966,9 @@ func TestValidateChildAccount_EdgeCases(t *testing.T) {
 		parentPriv, _ := keylib.GeneratePrivateKey()
 		parentPubKey := parentPriv.PublicKey()
 		var zeroChildKey keylib.NeuronPublicKey
+		stdIn, stdOut, stdErr := createCommAddrs()
 
-		err := ValidateChildAccount(zeroChildKey, parentPubKey)
+		err := ValidateChildAccount(zeroChildKey, parentPubKey, stdIn, stdOut, stdErr, nil)
 		if err == nil {
 			t.Error("ValidateChildAccount should fail for zero child key")
 		}
@@ -966,8 +978,9 @@ func TestValidateChildAccount_EdgeCases(t *testing.T) {
 		childPriv, _ := keylib.GeneratePrivateKey()
 		childPubKey := childPriv.PublicKey()
 		var zeroParentKey keylib.NeuronPublicKey
+		stdIn, stdOut, stdErr := createCommAddrs()
 
-		err := ValidateChildAccount(childPubKey, zeroParentKey)
+		err := ValidateChildAccount(childPubKey, zeroParentKey, stdIn, stdOut, stdErr, nil)
 		if err == nil {
 			t.Error("ValidateChildAccount should fail for zero parent key")
 		}

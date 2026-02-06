@@ -1,97 +1,78 @@
 # Task Completion Checklist
 
-When completing a coding task in this project, verify the following:
+When completing a task in this codebase, ensure the following:
 
-## Before Committing
+## Before Submitting
 
-### 1. Build Verification
+### 1. Tests Pass
 ```bash
-# Ensure the project builds without errors
-go build ./...
+# Run all tests with race detector
+go test ./keylib/... ./account/... -race -v
 ```
 
-### 2. Run Tests
+### 2. Coverage is Maintained
+- keylib: Target >85% coverage (currently 87.1%)
+- account: Target >85% coverage (currently 91.6%)
 ```bash
-# Run all tests and verify they pass
-go test ./... -v
-
-# For keylib changes, run with coverage
-go test ./keylib -v -cover
+go test ./keylib/... -coverprofile=keylib.out && go tool cover -func=keylib.out
+go test ./account/... -coverprofile=account.out && go tool cover -func=account.out
 ```
 
-### 3. Code Quality
+### 3. Code is Formatted
 ```bash
-# Run go vet
+go fmt ./...
+```
+
+### 4. No Vet Errors
+```bash
 go vet ./...
-
-# Check formatting
-gofmt -d ./keylib ./account ./api
 ```
 
-### 4. Documentation
-- Update godoc comments if public API changed
-- Update README.md if needed
-- Update IMPLEMENTATION_MAPPING.md if implementing spec requirements
+### 5. Dependencies are Tidy
+```bash
+go mod tidy
+```
 
-## For New Features
+## Code Quality Checks
 
-### Type Safety
-- [ ] New types have unexported fields
-- [ ] Factory functions validate all inputs
-- [ ] `IsZero()` method implemented
-- [ ] Zero-value struct is explicitly invalid
+### Security
+- [ ] No sensitive data logged or printed
+- [ ] Constant-time comparisons used for cryptographic data
+- [ ] `Zeroize()` called when done with private keys
+- [ ] Password-encrypted storage used for persisted keys
 
 ### Error Handling
-- [ ] Use `KeyError` with appropriate `ErrorKind`
-- [ ] Include operation name in `Op` field
-- [ ] Provide descriptive `Details` message
-- [ ] Wrap underlying errors
+- [ ] All errors returned, not panicked
+- [ ] Errors use structured `KeyError` or `AccountError` types
+- [ ] Error messages are descriptive and actionable
 
-### Security (for crypto operations)
-- [ ] Use constant-time comparisons for sensitive data
-- [ ] Implement `Zeroize()` for private key types
-- [ ] Add `*Safe()` variant if method could fail silently
-- [ ] No timing-based vulnerabilities
+### Type Safety
+- [ ] No string-based key handling (use typed wrappers)
+- [ ] Zero values handled appropriately
+- [ ] Safe variants provided for fallible operations
 
 ### Testing
-- [ ] Table-driven tests for all cases
-- [ ] Test error conditions
-- [ ] Test edge cases (zero values, invalid inputs)
-- [ ] Add integration test with known vectors if applicable
+- [ ] Unit tests added/updated for new code
+- [ ] Table-driven tests with descriptive subtests
+- [ ] Edge cases covered (zero values, invalid inputs)
+- [ ] Race conditions tested (`-race` flag)
 
-## For API Changes
+### Documentation
+- [ ] Exported symbols documented
+- [ ] doc.go updated if package API changed
+- [ ] README.md updated if user-facing changes
 
-### Swagger Documentation
+## API Changes (if applicable)
+
+### Swagger
 ```bash
-# Regenerate swagger docs
-swag init -g cmd/keylib-api/main.go
+# Regenerate swagger docs if API changed
+swag init -g api/server.go -o api/docs
 ```
 
-### Request/Response
-- [ ] DTOs defined in `api/dto/`
-- [ ] Swagger annotations on handlers
-- [ ] Proper error responses
-
-## For Account Package Changes
-
-### Backend Compatibility
-- [ ] Test with Hedera backend
-- [ ] Test with Kafka backend (if applicable)
-- [ ] Ensure interface compliance
-
-### Serialization
-- [ ] JSON marshaling/unmarshaling works
-- [ ] Backward compatibility maintained
-
-## Final Steps
-
+### Verify API Works
 ```bash
-# One final verification
-go build ./...
-go test ./... -v
-go vet ./...
-
-# If all passes, commit
-git add <files>
-git commit -m "descriptive message"
+# Start server and test manually
+go run ./cmd/keylib-api
+# Open http://localhost:8080/swagger/index.html
 ```

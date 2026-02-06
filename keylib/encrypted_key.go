@@ -24,8 +24,8 @@ const (
 	// Argon2 parameter bounds for validation
 	minArgon2Time    = 1
 	maxArgon2Time    = 100
-	minArgon2Memory  = 8 * 1024    // 8 MiB minimum
-	maxArgon2Memory  = 256 * 1024  // 256 MiB maximum (to prevent memory exhaustion)
+	minArgon2Memory  = 8 * 1024  // 8 MiB minimum
+	maxArgon2Memory  = 64 * 1024 // 64 MiB maximum (prevents memory exhaustion DoS)
 	minArgon2Threads = 1
 	maxArgon2Threads = 32
 )
@@ -43,7 +43,7 @@ func (c *scrambleConfig) validate(op string) error {
 		return errEncryption(op, "argon2Time must be between 1 and 100", nil)
 	}
 	if c.argon2Memory < minArgon2Memory || c.argon2Memory > maxArgon2Memory {
-		return errEncryption(op, "argon2Memory must be between 8 MiB and 256 MiB", nil)
+		return errEncryption(op, "argon2Memory must be between 8 MiB and 64 MiB", nil)
 	}
 	if c.argon2Threads < minArgon2Threads || c.argon2Threads > maxArgon2Threads {
 		return errEncryption(op, "argon2Threads must be between 1 and 32", nil)

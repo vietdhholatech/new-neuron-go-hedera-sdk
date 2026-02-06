@@ -88,9 +88,8 @@ func TestIntegration_ParentAccountLifecycle(t *testing.T) {
 		}
 		reachableAddr := "/ip4/192.168.1.1/tcp/4001/p2p/" + peerID.String()
 
-		// 4. Build the account
+		// 4. Build the account (Parent accounts must NOT have comm channels)
 		account, err := NewParentAccountBuilder(pubKey, did).
-			WithHederaTopics("0.0.111", "0.0.222", "0.0.333").
 			WithReachableAddr(reachableAddr).
 			Build()
 		if err != nil {
@@ -180,9 +179,11 @@ func TestIntegration_ChildAccountLifecycle(t *testing.T) {
 		childPeerID, _ := childPubKey.PeerID()
 		childReachableAddr := "/ip4/192.168.1.2/tcp/4001/p2p/" + childPeerID.String()
 
-		// 3. Build child account
+		// 3. Build child account (Child accounts must have all 3 comm channels)
 		childAccount, err := NewChildAccountBuilder(childPubKey, parentPubKey).
 			WithStdInHedera("0.0.444").
+			WithStdOutHedera("0.0.555").
+			WithStdErrHedera("0.0.666").
 			WithReachableAddr(childReachableAddr).
 			Build()
 		if err != nil {
@@ -235,6 +236,211 @@ func TestIntegration_ChildAccountLifecycle(t *testing.T) {
 		}
 		if jsonMap["accountType"] != "Child" {
 			t.Errorf("JSON accountType = %v, want 'Child'", jsonMap["accountType"])
+		}
+	})
+}
+
+// =============================================================================
+// Shared Account Lifecycle Tests
+// =============================================================================
+
+func TestIntegration_SharedAccountLifecycle(t *testing.T) {
+	t.Run("complete lifecycle: create multisig -> build -> validate -> serialize", func(t *testing.T) {
+		// 1. Generate keys for 2-of-3 multisig
+		priv1, _ := keylib.GeneratePrivateKey()
+		priv2, _ := keylib.GeneratePrivateKey()
+		priv3, _ := keylib.GeneratePrivateKey()
+
+		pubKeys := []keylib.NeuronPublicKey{
+			priv1.PublicKey(),
+			priv2.PublicKey(),
+			priv3.PublicKey(),
+		}
+
+		// 2. Create MultisigKey (2-of-3)
+		multisigKey, err := keylib.NewMultisigKey(pubKeys, 2)
+		if err != nil {
+			t.Fatalf("NewMultisigKey error: %v", err)
+		}
+
+		// 3. Build Shared account via NewSharedAccountBuilder
+		account, err := NewSharedAccountBuilder(multisigKey).Build()
+		if err != nil {
+			t.Fatalf("Build error: %v", err)
+		}
+
+		// 4. Validate
+		if err := account.Validate(); err != nil {
+			t.Errorf("Validate error: %v", err)
+		}
+
+		// 5. Verify IsZero() returns false for valid account
+		if account.IsZero() {
+			t.Error("valid Shared account should not be zero")
+		}
+
+		// 6. Verify IsShared() returns true
+		if !account.IsShared() {
+			t.Error("should be shared account")
+		}
+		if account.IsParent() {
+			t.Error("should not be parent")
+		}
+		if account.IsChild() {
+			t.Error("should not be child")
+		}
+
+		// 7. Verify prohibited fields are empty (DID, stdIn, stdOut, stdErr, parentPubKey, publicKey)
+		if account.DID() != nil {
+			t.Error("Shared account should have no DID")
+		}
+		if !account.StdIn().IsZero() {
+			t.Error("Shared account should have no StdIn")
+		}
+		if !account.StdOut().IsZero() {
+			t.Error("Shared account should have no StdOut")
+		}
+		if !account.StdErr().IsZero() {
+			t.Error("Shared account should have no StdErr")
+		}
+		if !account.ParentPublicKey().IsZero() {
+			t.Error("Shared account should have no ParentPublicKey")
+		}
+		if !account.PublicKey().IsZero() {
+			t.Error("Shared account should have zero PublicKey (uses MultisigKey)")
+		}
+
+		// 8. Verify MultisigKey is accessible
+		retrievedMultisig := account.MultisigKey()
+		if retrievedMultisig == nil {
+			t.Fatal("MultisigKey should not be nil")
+		}
+		if retrievedMultisig.Threshold() != 2 {
+			t.Errorf("Threshold = %d, want 2", retrievedMultisig.Threshold())
+		}
+		if retrievedMultisig.Total() != 3 {
+			t.Errorf("Total = %d, want 3", retrievedMultisig.Total())
+		}
+
+		// 9. JSON marshal and verify fields
+		jsonData, err := json.Marshal(account)
+		if err != nil {
+			t.Fatalf("Marshal error: %v", err)
+		}
+
+		var jsonMap map[string]interface{}
+		if err := json.Unmarshal(jsonData, &jsonMap); err != nil {
+			t.Fatalf("Unmarshal error: %v", err)
+		}
+
+		if jsonMap["accountType"] != "Shared" {
+			t.Errorf("JSON accountType = %v, want 'Shared'", jsonMap["accountType"])
+		}
+		// Multisig fields are serialized as separate JSON fields
+		if jsonMap["multisigThreshold"] == nil {
+			t.Error("JSON missing multisigThreshold for Shared account")
+		}
+		if jsonMap["multisigTotal"] == nil {
+			t.Error("JSON missing multisigTotal for Shared account")
+		}
+		if jsonMap["multisigKeys"] == nil {
+			t.Error("JSON missing multisigKeys for Shared account")
+		}
+		if jsonMap["did"] != nil {
+			t.Error("JSON should not have did for Shared account")
+		}
+		if jsonMap["parentPublicKey"] != nil {
+			t.Error("JSON should not have parentPublicKey for Shared account")
+		}
+
+		// 10. JSON unmarshal and verify Equal() with original
+		var reconstructed NeuronAccount
+		if err := json.Unmarshal(jsonData, &reconstructed); err != nil {
+			t.Fatalf("Unmarshal into NeuronAccount error: %v", err)
+		}
+
+		if !account.Equal(reconstructed) {
+			t.Error("reconstructed account should equal original")
+		}
+	})
+
+	t.Run("IsZero behavior", func(t *testing.T) {
+		// Valid Shared account: IsZero() == false
+		priv1, _ := keylib.GeneratePrivateKey()
+		priv2, _ := keylib.GeneratePrivateKey()
+
+		multisigKey, _ := keylib.NewMultisigKey(
+			[]keylib.NeuronPublicKey{priv1.PublicKey(), priv2.PublicKey()},
+			2,
+		)
+
+		account, err := NewSharedAccountBuilder(multisigKey).Build()
+		if err != nil {
+			t.Fatalf("Build error: %v", err)
+		}
+
+		if account.IsZero() {
+			t.Error("valid Shared account should return IsZero() == false")
+		}
+
+		// Zero-value NeuronAccount: IsZero() == true
+		var zeroAccount NeuronAccount
+		if !zeroAccount.IsZero() {
+			t.Error("zero-value NeuronAccount should return IsZero() == true")
+		}
+	})
+
+	t.Run("Equal behavior between Shared accounts", func(t *testing.T) {
+		// Generate keys
+		priv1, _ := keylib.GeneratePrivateKey()
+		priv2, _ := keylib.GeneratePrivateKey()
+		priv3, _ := keylib.GeneratePrivateKey()
+
+		pubKeys := []keylib.NeuronPublicKey{
+			priv1.PublicKey(),
+			priv2.PublicKey(),
+		}
+
+		// Same multisig config: Equal() == true
+		multisigKey1, _ := keylib.NewMultisigKey(pubKeys, 2)
+		multisigKey2, _ := keylib.NewMultisigKey(pubKeys, 2) // Same keys and threshold
+
+		account1, _ := NewSharedAccountBuilder(multisigKey1).Build()
+		account2, _ := NewSharedAccountBuilder(multisigKey2).Build()
+
+		if !account1.Equal(account2) {
+			t.Error("Shared accounts with same multisig config should be equal")
+		}
+
+		// Different multisig config (different threshold): Equal() == false
+		multisigKey3, _ := keylib.NewMultisigKey(pubKeys, 1) // Different threshold
+		account3, _ := NewSharedAccountBuilder(multisigKey3).Build()
+
+		if account1.Equal(account3) {
+			t.Error("Shared accounts with different thresholds should not be equal")
+		}
+
+		// Different multisig config (different keys): Equal() == false
+		differentKeys := []keylib.NeuronPublicKey{
+			priv2.PublicKey(),
+			priv3.PublicKey(),
+		}
+		multisigKey4, _ := keylib.NewMultisigKey(differentKeys, 2)
+		account4, _ := NewSharedAccountBuilder(multisigKey4).Build()
+
+		if account1.Equal(account4) {
+			t.Error("Shared accounts with different keys should not be equal")
+		}
+
+		// Shared vs Parent: Equal() == false
+		parentDID := newIntegrationMockDID(priv1.PublicKey())
+		parentAccount, _ := NewParentAccountBuilder(priv1.PublicKey(), parentDID).Build()
+
+		if account1.Equal(parentAccount) {
+			t.Error("Shared account should not equal Parent account")
+		}
+		if parentAccount.Equal(account1) {
+			t.Error("Parent account should not equal Shared account")
 		}
 	})
 }
@@ -414,9 +620,10 @@ func TestIntegration_ErrorHandling(t *testing.T) {
 			t.Error("zero account should have validation errors")
 		}
 
-		// Should have at least error for zero public key and invalid account type
-		if len(result.Errors()) < 2 {
-			t.Errorf("expected at least 2 errors, got %d", len(result.Errors()))
+		// Zero account has invalid account type (Unspecified)
+		// Public key check is only done for valid account types
+		if len(result.Errors()) < 1 {
+			t.Errorf("expected at least 1 error, got %d", len(result.Errors()))
 		}
 	})
 
@@ -443,12 +650,15 @@ func TestIntegration_ErrorHandling(t *testing.T) {
 // =============================================================================
 
 func TestIntegration_CommunicationEndpoints(t *testing.T) {
-	t.Run("Hedera topics are correctly set", func(t *testing.T) {
-		privKey, _ := keylib.GeneratePrivateKey()
-		pubKey := privKey.PublicKey()
-		did := newIntegrationMockDID(pubKey)
+	t.Run("Hedera topics are correctly set on child account", func(t *testing.T) {
+		// Child accounts must have all 3 comm channels (Parent accounts cannot have any)
+		parentPriv, _ := keylib.GeneratePrivateKey()
+		parentPubKey := parentPriv.PublicKey()
 
-		account, err := NewParentAccountBuilder(pubKey, did).
+		childPriv, _ := keylib.GeneratePrivateKey()
+		childPubKey := childPriv.PublicKey()
+
+		account, err := NewChildAccountBuilder(childPubKey, parentPubKey).
 			WithHederaTopics("0.0.111", "0.0.222", "0.0.333").
 			Build()
 		if err != nil {
@@ -472,17 +682,22 @@ func TestIntegration_CommunicationEndpoints(t *testing.T) {
 		}
 	})
 
-	t.Run("Kafka topics are correctly set", func(t *testing.T) {
-		privKey, _ := keylib.GeneratePrivateKey()
-		pubKey := privKey.PublicKey()
-		did := newIntegrationMockDID(pubKey)
+	t.Run("Kafka topics are correctly set on child account", func(t *testing.T) {
+		// Child accounts must have all 3 comm channels
+		parentPriv, _ := keylib.GeneratePrivateKey()
+		parentPubKey := parentPriv.PublicKey()
+
+		childPriv, _ := keylib.GeneratePrivateKey()
+		childPubKey := childPriv.PublicKey()
 
 		kafkaStdIn, _ := NewKafkaTopicAddress("agent.stdin")
 		kafkaStdOut, _ := NewKafkaTopicAddress("agent.stdout")
+		kafkaStdErr, _ := NewKafkaTopicAddress("agent.stderr")
 
-		account, err := NewParentAccountBuilder(pubKey, did).
+		account, err := NewChildAccountBuilder(childPubKey, parentPubKey).
 			WithStdIn(kafkaStdIn).
 			WithStdOut(kafkaStdOut).
+			WithStdErr(kafkaStdErr).
 			Build()
 		if err != nil {
 			t.Fatalf("Build error: %v", err)
@@ -573,8 +788,8 @@ func TestIntegration_JSONSerialization(t *testing.T) {
 		did := newIntegrationMockDID(pubKey)
 		addr := "/ip4/192.168.1.1/tcp/4001/p2p/" + knownPeerID
 
+		// Parent accounts must NOT have comm channels
 		account, _ := NewParentAccountBuilder(pubKey, did).
-			WithHederaTopics("0.0.111", "0.0.222", "0.0.333").
 			WithReachableAddr(addr).
 			Build()
 
@@ -586,8 +801,8 @@ func TestIntegration_JSONSerialization(t *testing.T) {
 		var result map[string]interface{}
 		json.Unmarshal(jsonData, &result)
 
-		// Check all expected fields
-		expectedFields := []string{"publicKey", "peerId", "evmAddress", "accountType", "did", "stdIn", "stdOut", "stdErr", "reachableAddrs"}
+		// Check all expected fields (parent accounts don't have comm channels)
+		expectedFields := []string{"publicKey", "peerId", "evmAddress", "accountType", "did", "reachableAddrs"}
 		for _, field := range expectedFields {
 			if result[field] == nil {
 				t.Errorf("JSON missing field: %s", field)
@@ -607,7 +822,12 @@ func TestIntegration_JSONSerialization(t *testing.T) {
 		childPriv, _ := keylib.GeneratePrivateKey()
 		parentPriv, _ := keylib.GeneratePrivateKey()
 
-		childAccount, _ := NewChildAccountBuilder(childPriv.PublicKey(), parentPriv.PublicKey()).Build()
+		// Child accounts must have all 3 comm channels
+		childAccount, _ := NewChildAccountBuilder(childPriv.PublicKey(), parentPriv.PublicKey()).
+			WithStdInHedera("0.0.111").
+			WithStdOutHedera("0.0.222").
+			WithStdErrHedera("0.0.333").
+			Build()
 
 		jsonData, _ := json.Marshal(childAccount)
 
@@ -633,14 +853,11 @@ func TestIntegration_Equality(t *testing.T) {
 		pubKey, _ := keylib.ParsePublicKeyHex(knownPubKeyHex)
 		did := newIntegrationMockDID(pubKey)
 
-		// Build two accounts with same key but different properties
+		// Build two accounts with same key (Parent accounts must NOT have comm channels)
 		account1, _ := NewParentAccountBuilder(pubKey, did).
-			WithStdInHedera("0.0.111").
 			Build()
 
 		account2, _ := NewParentAccountBuilder(pubKey, did).
-			WithStdInHedera("0.0.999").
-			WithStdOutHedera("0.0.888").
 			Build()
 
 		if !account1.Equal(account2) {
@@ -656,7 +873,12 @@ func TestIntegration_Equality(t *testing.T) {
 		childPriv, _ := keylib.GeneratePrivateKey()
 
 		parentAccount, _ := NewParentAccountBuilder(parentPubKey, parentDID).Build()
-		childAccount, _ := NewChildAccountBuilder(childPriv.PublicKey(), parentPubKey).Build()
+		// Child accounts must have all 3 comm channels
+		childAccount, _ := NewChildAccountBuilder(childPriv.PublicKey(), parentPubKey).
+			WithStdInHedera("0.0.111").
+			WithStdOutHedera("0.0.222").
+			WithStdErrHedera("0.0.333").
+			Build()
 
 		if parentAccount.Equal(childAccount) {
 			t.Error("parent and child with different keys should not be equal")

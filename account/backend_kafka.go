@@ -66,6 +66,7 @@ func (k *kafkaBackend) Metadata() BackendMetadata {
 		LocatorFormat:  "topic-name",
 		LocatorExample: "my-events-topic",
 		RequiresConfig: true, // Requires Kafka broker configuration
+		Version:        "1.0.0",
 		Properties: map[string]string{
 			"maxPartitions":     "configurable",
 			"replicationFactor": "configurable",

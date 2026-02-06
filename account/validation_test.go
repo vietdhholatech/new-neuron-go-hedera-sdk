@@ -104,11 +104,16 @@ func TestValidateAccountType(t *testing.T) {
 // =============================================================================
 
 func TestValidateParentAccount(t *testing.T) {
+	// Helper to create zero comm addresses
+	var zeroComm CommAddress
+	var zeroPubKey keylib.NeuronPublicKey
+
 	t.Run("valid parent account passes", func(t *testing.T) {
 		privKey, _ := keylib.GeneratePrivateKey()
 		did := newMockDID(privKey.PublicKey())
 
-		if err := ValidateParentAccount(privKey.PublicKey(), did); err != nil {
+		// Parent accounts must have pubKey and DID, but NO comm channels or parentPubKey
+		if err := ValidateParentAccount(privKey.PublicKey(), did, zeroComm, zeroComm, zeroComm, zeroPubKey); err != nil {
 			t.Errorf("ValidateParentAccount() error = %v", err)
 		}
 	})
@@ -117,8 +122,7 @@ func TestValidateParentAccount(t *testing.T) {
 		privKey, _ := keylib.GeneratePrivateKey()
 		did := newMockDID(privKey.PublicKey())
 
-		var zeroPubKey keylib.NeuronPublicKey
-		err := ValidateParentAccount(zeroPubKey, did)
+		err := ValidateParentAccount(zeroPubKey, did, zeroComm, zeroComm, zeroComm, zeroPubKey)
 		if err == nil {
 			t.Fatal("expected error for zero public key")
 		}
@@ -130,13 +134,45 @@ func TestValidateParentAccount(t *testing.T) {
 
 	t.Run("nil DID fails", func(t *testing.T) {
 		privKey, _ := keylib.GeneratePrivateKey()
-		err := ValidateParentAccount(privKey.PublicKey(), nil)
+		err := ValidateParentAccount(privKey.PublicKey(), nil, zeroComm, zeroComm, zeroComm, zeroPubKey)
 		if err == nil {
 			t.Fatal("expected error for nil DID")
 		}
 		var ae *AccountError
 		if errors.As(err, &ae) && ae.Kind != ErrKindMissingRequired {
 			t.Errorf("error Kind = %v, want %v", ae.Kind, ErrKindMissingRequired)
+		}
+	})
+
+	t.Run("comm channels prohibited", func(t *testing.T) {
+		privKey, _ := keylib.GeneratePrivateKey()
+		did := newMockDID(privKey.PublicKey())
+
+		// Create a non-zero comm address
+		stdIn, _ := NewCommAddress(HederaTopicKind, "0.0.12345")
+
+		err := ValidateParentAccount(privKey.PublicKey(), did, stdIn, zeroComm, zeroComm, zeroPubKey)
+		if err == nil {
+			t.Fatal("expected error for comm channel on parent")
+		}
+		var ae *AccountError
+		if errors.As(err, &ae) && ae.Kind != ErrKindProhibitedField {
+			t.Errorf("error Kind = %v, want %v", ae.Kind, ErrKindProhibitedField)
+		}
+	})
+
+	t.Run("parent reference prohibited", func(t *testing.T) {
+		privKey, _ := keylib.GeneratePrivateKey()
+		did := newMockDID(privKey.PublicKey())
+		otherKey, _ := keylib.GeneratePrivateKey()
+
+		err := ValidateParentAccount(privKey.PublicKey(), did, zeroComm, zeroComm, zeroComm, otherKey.PublicKey())
+		if err == nil {
+			t.Fatal("expected error for parent reference on parent account")
+		}
+		var ae *AccountError
+		if errors.As(err, &ae) && ae.Kind != ErrKindProhibitedField {
+			t.Errorf("error Kind = %v, want %v", ae.Kind, ErrKindProhibitedField)
 		}
 	})
 }
@@ -146,11 +182,23 @@ func TestValidateParentAccount(t *testing.T) {
 // =============================================================================
 
 func TestValidateChildAccount(t *testing.T) {
+	// Helper function to create required comm addresses for child accounts
+	createCommAddrs := func() (CommAddress, CommAddress, CommAddress) {
+		stdIn, _ := NewCommAddress(HederaTopicKind, "0.0.111")
+		stdOut, _ := NewCommAddress(HederaTopicKind, "0.0.222")
+		stdErr, _ := NewCommAddress(HederaTopicKind, "0.0.333")
+		return stdIn, stdOut, stdErr
+	}
+
+	var zeroComm CommAddress
+
 	t.Run("valid child account passes", func(t *testing.T) {
 		childKey, _ := keylib.GeneratePrivateKey()
 		parentKey, _ := keylib.GeneratePrivateKey()
+		stdIn, stdOut, stdErr := createCommAddrs()
 
-		if err := ValidateChildAccount(childKey.PublicKey(), parentKey.PublicKey()); err != nil {
+		// Child accounts must have all 3 comm channels and NO DID
+		if err := ValidateChildAccount(childKey.PublicKey(), parentKey.PublicKey(), stdIn, stdOut, stdErr, nil); err != nil {
 			t.Errorf("ValidateChildAccount() error = %v", err)
 		}
 	})
@@ -158,8 +206,9 @@ func TestValidateChildAccount(t *testing.T) {
 	t.Run("zero child public key fails", func(t *testing.T) {
 		parentKey, _ := keylib.GeneratePrivateKey()
 		var zeroChildKey keylib.NeuronPublicKey
+		stdIn, stdOut, stdErr := createCommAddrs()
 
-		err := ValidateChildAccount(zeroChildKey, parentKey.PublicKey())
+		err := ValidateChildAccount(zeroChildKey, parentKey.PublicKey(), stdIn, stdOut, stdErr, nil)
 		if err == nil {
 			t.Fatal("expected error for zero child key")
 		}
@@ -168,8 +217,9 @@ func TestValidateChildAccount(t *testing.T) {
 	t.Run("zero parent public key fails", func(t *testing.T) {
 		childKey, _ := keylib.GeneratePrivateKey()
 		var zeroParentKey keylib.NeuronPublicKey
+		stdIn, stdOut, stdErr := createCommAddrs()
 
-		err := ValidateChildAccount(childKey.PublicKey(), zeroParentKey)
+		err := ValidateChildAccount(childKey.PublicKey(), zeroParentKey, stdIn, stdOut, stdErr, nil)
 		if err == nil {
 			t.Fatal("expected error for zero parent key")
 		}
@@ -178,14 +228,46 @@ func TestValidateChildAccount(t *testing.T) {
 	t.Run("child equals parent fails", func(t *testing.T) {
 		key, _ := keylib.GeneratePrivateKey()
 		pubKey := key.PublicKey()
+		stdIn, stdOut, stdErr := createCommAddrs()
 
-		err := ValidateChildAccount(pubKey, pubKey)
+		err := ValidateChildAccount(pubKey, pubKey, stdIn, stdOut, stdErr, nil)
 		if err == nil {
 			t.Fatal("expected error when child equals parent")
 		}
 		var ae *AccountError
 		if errors.As(err, &ae) && ae.Kind != ErrKindInvalidHierarchy {
 			t.Errorf("error Kind = %v, want %v", ae.Kind, ErrKindInvalidHierarchy)
+		}
+	})
+
+	t.Run("missing stdIn fails", func(t *testing.T) {
+		childKey, _ := keylib.GeneratePrivateKey()
+		parentKey, _ := keylib.GeneratePrivateKey()
+		_, stdOut, stdErr := createCommAddrs()
+
+		err := ValidateChildAccount(childKey.PublicKey(), parentKey.PublicKey(), zeroComm, stdOut, stdErr, nil)
+		if err == nil {
+			t.Fatal("expected error for missing stdIn")
+		}
+		var ae *AccountError
+		if errors.As(err, &ae) && ae.Kind != ErrKindMissingRequired {
+			t.Errorf("error Kind = %v, want %v", ae.Kind, ErrKindMissingRequired)
+		}
+	})
+
+	t.Run("DID prohibited", func(t *testing.T) {
+		childKey, _ := keylib.GeneratePrivateKey()
+		parentKey, _ := keylib.GeneratePrivateKey()
+		stdIn, stdOut, stdErr := createCommAddrs()
+		did := newMockDID(childKey.PublicKey())
+
+		err := ValidateChildAccount(childKey.PublicKey(), parentKey.PublicKey(), stdIn, stdOut, stdErr, did)
+		if err == nil {
+			t.Fatal("expected error for DID on child account")
+		}
+		var ae *AccountError
+		if errors.As(err, &ae) && ae.Kind != ErrKindProhibitedField {
+			t.Errorf("error Kind = %v, want %v", ae.Kind, ErrKindProhibitedField)
 		}
 	})
 }
@@ -444,12 +526,16 @@ func TestAccountValidator_Fluent(t *testing.T) {
 }
 
 func TestAccountValidator_ValidateParentRequirements(t *testing.T) {
+	var zeroComm CommAddress
+	var zeroPubKey keylib.NeuronPublicKey
+
 	t.Run("valid parent passes", func(t *testing.T) {
 		privKey, _ := keylib.GeneratePrivateKey()
 		pubKey := privKey.PublicKey()
 		did := newMockDID(pubKey)
 
-		v := NewAccountValidator().ValidateParentRequirements(pubKey, did)
+		// Parent accounts must have pubKey and DID, but NO comm channels or parentPubKey
+		v := NewAccountValidator().ValidateParentRequirements(pubKey, did, zeroComm, zeroComm, zeroComm, zeroPubKey)
 		if !v.IsValid() {
 			t.Errorf("error: %v", v.Error())
 		}
@@ -461,7 +547,12 @@ func TestAccountValidator_ValidateChildRequirements(t *testing.T) {
 		childKey, _ := keylib.GeneratePrivateKey()
 		parentKey, _ := keylib.GeneratePrivateKey()
 
-		v := NewAccountValidator().ValidateChildRequirements(childKey.PublicKey(), parentKey.PublicKey())
+		// Child accounts must have all 3 comm channels and NO DID
+		stdIn, _ := NewCommAddress(HederaTopicKind, "0.0.111")
+		stdOut, _ := NewCommAddress(HederaTopicKind, "0.0.222")
+		stdErr, _ := NewCommAddress(HederaTopicKind, "0.0.333")
+
+		v := NewAccountValidator().ValidateChildRequirements(childKey.PublicKey(), parentKey.PublicKey(), stdIn, stdOut, stdErr, nil)
 		if !v.IsValid() {
 			t.Errorf("error: %v", v.Error())
 		}
@@ -494,6 +585,202 @@ func TestAccountValidator_Error(t *testing.T) {
 		v := NewAccountValidator().ValidatePublicKey(zeroPubKey)
 		if v.Error() == nil {
 			t.Error("Error() should return error when invalid")
+		}
+	})
+}
+
+// =============================================================================
+// ValidateSharedAccount Tests
+// =============================================================================
+
+func TestValidateSharedAccount(t *testing.T) {
+	// Helper to create valid MultisigKey
+	createValidMultisigKey := func() *keylib.MultisigKey {
+		priv1, _ := keylib.GeneratePrivateKey()
+		priv2, _ := keylib.GeneratePrivateKey()
+		priv3, _ := keylib.GeneratePrivateKey()
+		mk, _ := keylib.NewMultisigKey(
+			[]keylib.NeuronPublicKey{priv1.PublicKey(), priv2.PublicKey(), priv3.PublicKey()},
+			2,
+		)
+		return &mk
+	}
+
+	t.Run("valid shared account passes", func(t *testing.T) {
+		mk := createValidMultisigKey()
+		var zeroPubKey keylib.NeuronPublicKey
+		var zeroAddr CommAddress
+
+		err := ValidateSharedAccount(mk, nil, zeroAddr, zeroAddr, zeroAddr, zeroPubKey)
+		if err != nil {
+			t.Errorf("ValidateSharedAccount() error = %v", err)
+		}
+	})
+
+	t.Run("nil MultisigKey fails", func(t *testing.T) {
+		var zeroPubKey keylib.NeuronPublicKey
+		var zeroAddr CommAddress
+
+		err := ValidateSharedAccount(nil, nil, zeroAddr, zeroAddr, zeroAddr, zeroPubKey)
+		if err == nil {
+			t.Error("expected error for nil MultisigKey")
+		}
+		var ae *AccountError
+		if errors.As(err, &ae) && ae.Kind != ErrKindMissingRequired {
+			t.Errorf("expected ErrKindMissingRequired, got %v", ae.Kind)
+		}
+	})
+
+	t.Run("zero MultisigKey fails", func(t *testing.T) {
+		var zeroMk keylib.MultisigKey
+		var zeroPubKey keylib.NeuronPublicKey
+		var zeroAddr CommAddress
+
+		err := ValidateSharedAccount(&zeroMk, nil, zeroAddr, zeroAddr, zeroAddr, zeroPubKey)
+		if err == nil {
+			t.Error("expected error for zero MultisigKey")
+		}
+	})
+
+	t.Run("DID prohibited", func(t *testing.T) {
+		mk := createValidMultisigKey()
+		priv, _ := keylib.GeneratePrivateKey()
+		did := newMockDID(priv.PublicKey())
+		var zeroPubKey keylib.NeuronPublicKey
+		var zeroAddr CommAddress
+
+		err := ValidateSharedAccount(mk, did, zeroAddr, zeroAddr, zeroAddr, zeroPubKey)
+		if err == nil {
+			t.Error("expected error when DID is present")
+		}
+		var ae *AccountError
+		if errors.As(err, &ae) && ae.Kind != ErrKindProhibitedField {
+			t.Errorf("expected ErrKindProhibitedField, got %v", ae.Kind)
+		}
+	})
+
+	t.Run("stdIn prohibited", func(t *testing.T) {
+		mk := createValidMultisigKey()
+		var zeroPubKey keylib.NeuronPublicKey
+		var zeroAddr CommAddress
+		stdIn, _ := NewHederaTopicAddress("0.0.111")
+
+		err := ValidateSharedAccount(mk, nil, stdIn, zeroAddr, zeroAddr, zeroPubKey)
+		if err == nil {
+			t.Error("expected error when stdIn is present")
+		}
+		var ae *AccountError
+		if errors.As(err, &ae) && ae.Kind != ErrKindProhibitedField {
+			t.Errorf("expected ErrKindProhibitedField, got %v", ae.Kind)
+		}
+	})
+
+	t.Run("stdOut prohibited", func(t *testing.T) {
+		mk := createValidMultisigKey()
+		var zeroPubKey keylib.NeuronPublicKey
+		var zeroAddr CommAddress
+		stdOut, _ := NewHederaTopicAddress("0.0.222")
+
+		err := ValidateSharedAccount(mk, nil, zeroAddr, stdOut, zeroAddr, zeroPubKey)
+		if err == nil {
+			t.Error("expected error when stdOut is present")
+		}
+	})
+
+	t.Run("stdErr prohibited", func(t *testing.T) {
+		mk := createValidMultisigKey()
+		var zeroPubKey keylib.NeuronPublicKey
+		var zeroAddr CommAddress
+		stdErr, _ := NewHederaTopicAddress("0.0.333")
+
+		err := ValidateSharedAccount(mk, nil, zeroAddr, zeroAddr, stdErr, zeroPubKey)
+		if err == nil {
+			t.Error("expected error when stdErr is present")
+		}
+	})
+
+	t.Run("parentPubKey prohibited", func(t *testing.T) {
+		mk := createValidMultisigKey()
+		priv, _ := keylib.GeneratePrivateKey()
+		var zeroAddr CommAddress
+
+		err := ValidateSharedAccount(mk, nil, zeroAddr, zeroAddr, zeroAddr, priv.PublicKey())
+		if err == nil {
+			t.Error("expected error when parentPubKey is present")
+		}
+	})
+}
+
+func TestAccountValidator_ValidateSharedRequirements(t *testing.T) {
+	createValidMultisigKey := func() *keylib.MultisigKey {
+		priv1, _ := keylib.GeneratePrivateKey()
+		priv2, _ := keylib.GeneratePrivateKey()
+		mk, _ := keylib.NewMultisigKey(
+			[]keylib.NeuronPublicKey{priv1.PublicKey(), priv2.PublicKey()},
+			2,
+		)
+		return &mk
+	}
+
+	t.Run("valid shared requirements", func(t *testing.T) {
+		mk := createValidMultisigKey()
+		var zeroPubKey keylib.NeuronPublicKey
+		var zeroAddr CommAddress
+
+		v := NewAccountValidator().
+			ValidateSharedRequirements(mk, nil, zeroAddr, zeroAddr, zeroAddr, zeroPubKey)
+
+		if !v.IsValid() {
+			t.Errorf("expected valid, got error: %v", v.Error())
+		}
+	})
+
+	t.Run("returns self for chaining", func(t *testing.T) {
+		mk := createValidMultisigKey()
+		var zeroPubKey keylib.NeuronPublicKey
+		var zeroAddr CommAddress
+
+		v := NewAccountValidator()
+		result := v.ValidateSharedRequirements(mk, nil, zeroAddr, zeroAddr, zeroAddr, zeroPubKey)
+
+		if result != v {
+			t.Error("ValidateSharedRequirements should return self for chaining")
+		}
+	})
+}
+
+// =============================================================================
+// ValidateCurrencySymbol Tests
+// =============================================================================
+
+func TestValidateCurrencySymbol(t *testing.T) {
+	t.Run("no ledger attachment and no currency is valid", func(t *testing.T) {
+		if err := ValidateCurrencySymbol("", nil); err != nil {
+			t.Errorf("should pass without ledger attachment: %v", err)
+		}
+	})
+
+	t.Run("no ledger attachment with currency is valid", func(t *testing.T) {
+		if err := ValidateCurrencySymbol("HBAR", nil); err != nil {
+			t.Errorf("should pass with currency but no ledger: %v", err)
+		}
+	})
+
+	t.Run("ledger attachment with currency is valid", func(t *testing.T) {
+		attachment, _ := NewLedgerAttachment("hedera-mainnet", "0.0.12345")
+		if err := ValidateCurrencySymbol("HBAR", attachment); err != nil {
+			t.Errorf("should pass with both currency and ledger: %v", err)
+		}
+	})
+
+	t.Run("ledger attachment without currency fails", func(t *testing.T) {
+		attachment, _ := NewLedgerAttachment("hedera-mainnet", "0.0.12345")
+		err := ValidateCurrencySymbol("", attachment)
+		if err == nil {
+			t.Error("should fail when ledger is attached but currency is empty")
+		}
+		if !containsStr(err.Error(), "currencySymbol") {
+			t.Errorf("error should mention currencySymbol, got: %v", err)
 		}
 	})
 }

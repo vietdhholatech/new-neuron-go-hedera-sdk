@@ -1,109 +1,72 @@
 # Neuron Go Hedera SDK - Project Overview
 
 ## Purpose
-A Go SDK for Neuron that provides type-safe cryptographic key management with seamless interoperability between the Hedera/Hiero, Ethereum, and libp2p ecosystems. The library implements a "Rosetta Stone" for keys, allowing conversions between different key formats and address types.
+A comprehensive Go SDK for building decentralized agent identities on the Hedera network with multi-ecosystem interoperability (Hedera, Ethereum, libp2p).
 
 ## Tech Stack
-- **Go version**: 1.24.0
-- **Module path**: `github.com/aspect-build/neuron-go-hedera-sdk`
+- **Go 1.24+** (uses `clear()` builtin for secure memory zeroing)
+- **Hiero SDK v2.74.0+** - Hedera network integration
+- **go-ethereum** - Ethereum address derivation and EIP-55 checksums
+- **libp2p** - P2P networking and PeerID derivation
+- **Gin** - Web framework for REST API
+- **Swagger (swaggo)** - API documentation
+- **secp256k1 (ECDSA)** - Cryptographic signatures
+- **Argon2id + AES-256-GCM** - Password-based key encryption
 
-### Key Dependencies
-- `github.com/hiero-ledger/hiero-sdk-go/v2` (v2.74.0) - Hiero/Hedera SDK
-- `github.com/decred/dcrd/dcrec/secp256k1/v4` - secp256k1 curve implementation
-- `github.com/ethereum/go-ethereum` - Ethereum types (common.Address, crypto)
-- `github.com/libp2p/go-libp2p` - libp2p peer identity
-- `github.com/tyler-smith/go-bip39` - BIP39 mnemonic support
-- `github.com/gin-gonic/gin` - HTTP web framework for API
-- `github.com/swaggo/swag` - Swagger documentation generation
-- `golang.org/x/crypto` - Argon2id KDF
+## Core Modules
+
+### keylib (87.1% test coverage)
+Cryptographic key management with type-safe ECDSA secp256k1 keys:
+- `NeuronPrivateKey` - 32-byte private key with signing
+- `NeuronPublicKey` - 33-byte compressed public key
+- `EVMAddress` - 20-byte Ethereum address (EIP-55 checksum)
+- `PeerID` - libp2p peer identifier
+- `Signature` - 65-byte ECDSA signature (R‖S‖V)
+- `EncryptedPrivateKey` - Password-encrypted key storage (Argon2id + AES-256-GCM)
+- `MultisigKey` - M-of-N threshold multi-signature key with sorted deterministic ordering and protocol identifier (secp256k1-aggregated, hedera-threshold, frost, bls)
+- `Mnemonic` - BIP39 mnemonic generation and BIP32/BIP44 key derivation
+
+### account (91.6% test coverage)
+Agent identity and communication endpoint descriptors:
+- `NeuronAccount` - Agent identity with communication endpoints
+- `AccountType` - Parent (with DID), Child (with parent reference), or Shared (with MultisigKey)
+- `CommAddress` - Technology-agnostic communication address (kind:locator format)
+- `LedgerAttachment` - State machine for on-ledger account attachment (Detached → Attached → Verified) with enforced state transition guards
+- `ValidateCurrencySymbol` - Conditional validation: currency symbol required when LedgerAttachment is present
+- `LedgerVerifier` - Interface for verifying account-ledger relationships
+- Backend registry system for Hedera Consensus Service, Kafka, and custom backends
+- Builder pattern with error accumulation and type-specific validation
+
+### account/didkey
+W3C-compliant DID:Key support for secp256k1 keys.
+
+### api
+REST API exposing keylib functionality via Gin:
+- HTTP handlers in `api/handlers/`
+- DTOs in `api/dto/`
+- Swagger docs in `api/docs/`
 
 ## Project Structure
 ```
-new-neuron-go-hedera-sdk/
-├── keylib/                    # Core cryptographic key library
-│   ├── private_key.go         # NeuronPrivateKey type
-│   ├── public_key.go          # NeuronPublicKey type
-│   ├── signature.go           # Signature type with recovery
-│   ├── evm_address.go         # EVMAddress type (EIP-55)
-│   ├── peer_id.go             # PeerID wrapper for libp2p
-│   ├── factory.go             # Parse/From/Generate functions
-│   ├── mnemonic.go            # BIP39/BIP32 mnemonic support
-│   ├── encrypted_key.go       # Argon2id + AES-256-GCM encryption
-│   ├── validation.go          # Input validation helpers
-│   ├── constant_time.go       # Secure comparison utilities
-│   ├── errors.go              # KeyError type hierarchy
-│   ├── doc.go                 # Package documentation
-│   └── *_test.go              # Test files
-├── account/                   # NeuronAccount management
-│   ├── account.go             # NeuronAccount struct
-│   ├── account_type.go        # Account types (Parent/Child)
-│   ├── did.go                 # DID (Decentralized Identifier)
-│   ├── registry.go            # Account registry
-│   ├── backend*.go            # Backend implementations (Hedera, Kafka, Custom)
-│   ├── message.go             # Messaging primitives
-│   ├── topic.go               # Topic management
-│   ├── reachable.go           # Reachability addresses
-│   ├── builder.go             # Account builder pattern
-│   └── *_test.go              # Test files
-├── api/                       # REST API server
-│   ├── server.go              # Gin server setup
-│   ├── middleware.go          # HTTP middleware
-│   ├── handlers/              # API endpoint handlers
-│   │   ├── keys.go            # Key generation/parsing
-│   │   ├── signing.go         # Signing endpoints
-│   │   ├── mnemonic.go        # Mnemonic endpoints
-│   │   ├── encryption.go      # Encryption endpoints
-│   │   ├── hedera.go          # Hedera conversion endpoints
-│   │   └── ...
-│   ├── dto/                   # Data transfer objects
-│   └── docs/                  # Swagger documentation
+.
+├── keylib/           # Cryptographic key management (secp256k1)
+├── account/          # Agent identity descriptors
+│   └── didkey/       # DID:Key support (W3C compliant)
+├── api/              # Gin REST API
+│   ├── handlers/     # HTTP handlers
+│   ├── dto/          # Data transfer objects
+│   └── docs/         # Swagger documentation
 ├── cmd/
-│   └── keylib-api/
-│       └── main.go            # API server entry point
-├── docs/                      # Documentation and specs
-│   ├── Key Library High-Level Specification.md
-│   ├── NeuronAccount Specification.md
-│   └── ...
-├── go.mod
-├── go.sum
-└── README.md
+│   └── keylib-api/   # API server entrypoint
+└── docs/
+    └── implementation/ # Technical documentation (NeuronAccount.md, keylib.md)
 ```
 
-## Core Capabilities
-
-### keylib Package
-1. **Key Management**
-   - Generate ECDSA secp256k1 keys
-   - Parse keys from hex strings, bytes, Hedera SDK types
-   - BIP39 mnemonic generation and restoration
-   - BIP32 hierarchical derivation (default path: m/44'/60'/0'/0/0)
-
-2. **Key Encryption**
-   - Argon2id KDF (64MB memory, 3 iterations, 4 threads)
-   - AES-256-GCM authenticated encryption
-   - Scramble/Unscramble API
-
-3. **Conversions**
-   - NeuronKey ↔ Hedera SDK types
-   - PublicKey → EVMAddress (EIP-55 checksum)
-   - PublicKey → PeerID (libp2p)
-   - NeuronKey → standard ECDSA types
-
-4. **Signing**
-   - SignMessage (Keccak256 + ECDSA)
-   - SignDigest (pre-hashed data)
-   - Signature recovery (ecrecover)
-   - Verification
-
-### account Package
-- NeuronAccount identity management
-- Parent/Child account types
-- DID (Decentralized Identifier) support
-- Multiple backend support (Hedera, Kafka, Custom)
-- Account registry
-- Communication addresses and topics
-
-## Test Coverage
-- keylib: ~85.4%
-- Tests use table-driven pattern
-- Integration tests with known vectors
+## Key Design Principles
+1. **Type safety** - Functions accept and return types, not strings
+2. **Validation at boundaries** - All Parse* functions validate immediately
+3. **No panics** - All fallible operations return (T, error)
+4. **Zero-value safety** - Zero values are invalid; methods return errors
+5. **Constant-time operations** - All key comparisons prevent timing attacks
+6. **Memory safety** - Zeroize() clears sensitive data from memory
+7. **Immutability** - All types are immutable after construction

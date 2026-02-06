@@ -59,7 +59,7 @@ func TestNeuronAccount_MarshalJSON_ParentAccount(t *testing.T) {
 			},
 		},
 		{
-			name: "parent account with all optional fields",
+			name: "parent account with reachable addrs",
 			setup: func() (NeuronAccount, error) {
 				privKey, _ := keylib.GeneratePrivateKey()
 				pubKey := privKey.PublicKey()
@@ -67,10 +67,8 @@ func TestNeuronAccount_MarshalJSON_ParentAccount(t *testing.T) {
 				peerID, _ := pubKey.PeerID()
 				addr := "/ip4/192.168.1.1/tcp/4001/p2p/" + peerID.String()
 
+				// Parent accounts must NOT have comm channels
 				return NewParentAccountBuilder(pubKey, did).
-					WithStdInHedera("0.0.111").
-					WithStdOutHedera("0.0.222").
-					WithStdErrHedera("0.0.333").
 					WithReachableAddr(addr).
 					Build()
 			},
@@ -86,12 +84,9 @@ func TestNeuronAccount_MarshalJSON_ParentAccount(t *testing.T) {
 						t.Errorf("missing required field: %s", field)
 					}
 				}
-				// Check optional fields
-				optionalFields := []string{"stdIn", "stdOut", "stdErr", "reachableAddrs"}
-				for _, field := range optionalFields {
-					if _, ok := m[field]; !ok {
-						t.Errorf("missing optional field that should be present: %s", field)
-					}
+				// Check reachableAddrs is present
+				if _, ok := m["reachableAddrs"]; !ok {
+					t.Error("missing reachableAddrs field that should be present")
 				}
 			},
 		},
@@ -127,8 +122,11 @@ func TestNeuronAccount_MarshalJSON_ChildAccount(t *testing.T) {
 		childPriv, _ := keylib.GeneratePrivateKey()
 		childPubKey := childPriv.PublicKey()
 
+		// Child accounts must have all 3 comm channels
 		account, err := NewChildAccountBuilder(childPubKey, parentPubKey).
 			WithStdInHedera("0.0.111").
+			WithStdOutHedera("0.0.222").
+			WithStdErrHedera("0.0.333").
 			Build()
 		if err != nil {
 			t.Fatalf("Build failed: %v", err)
@@ -175,9 +173,9 @@ func TestNeuronAccount_MarshalJSON_ZeroValue(t *testing.T) {
 			t.Fatalf("unmarshal failed: %v", err)
 		}
 
-		// Verify zero-value fields
-		if m["publicKey"] != "" {
-			t.Errorf("expected empty publicKey for zero value, got %v", m["publicKey"])
+		// Verify zero-value fields are empty or omitted
+		if pk, exists := m["publicKey"]; exists && pk != "" {
+			t.Errorf("expected empty or omitted publicKey for zero value, got %v", pk)
 		}
 	})
 }
@@ -187,14 +185,20 @@ func TestNeuronAccount_MarshalJSON_ZeroValue(t *testing.T) {
 // =============================================================================
 
 func TestNeuronAccount_MarshalJSON_FieldFormats(t *testing.T) {
-	privKey, _ := keylib.GeneratePrivateKey()
-	pubKey := privKey.PublicKey()
-	did := newConcurrentMockDID(pubKey)
-	peerID, _ := pubKey.PeerID()
+	// Test field formats using a child account (which can have comm channels)
+	parentPriv, _ := keylib.GeneratePrivateKey()
+	parentPubKey := parentPriv.PublicKey()
 
-	account, err := NewParentAccountBuilder(pubKey, did).
+	childPriv, _ := keylib.GeneratePrivateKey()
+	childPubKey := childPriv.PublicKey()
+	childPeerID, _ := childPubKey.PeerID()
+
+	// Child accounts must have all 3 comm channels
+	account, err := NewChildAccountBuilder(childPubKey, parentPubKey).
 		WithStdInHedera("0.0.12345").
-		WithReachableAddr("/ip4/192.168.1.1/tcp/4001/p2p/" + peerID.String()).
+		WithStdOutHedera("0.0.22222").
+		WithStdErrHedera("0.0.33333").
+		WithReachableAddr("/ip4/192.168.1.1/tcp/4001/p2p/" + childPeerID.String()).
 		Build()
 	if err != nil {
 		t.Fatalf("Build failed: %v", err)
@@ -321,8 +325,8 @@ func TestNeuronAccount_MarshalJSON_EdgeCases(t *testing.T) {
 		pubKey := privKey.PublicKey()
 		did := newConcurrentMockDID(pubKey)
 
+		// Parent accounts must NOT have comm channels
 		account, _ := NewParentAccountBuilder(pubKey, did).
-			WithStdInHedera("0.0.111").
 			Build()
 
 		// Marshal multiple times
@@ -369,7 +373,12 @@ func TestNeuronAccount_String_Representations(t *testing.T) {
 		parentPriv, _ := keylib.GeneratePrivateKey()
 		childPriv, _ := keylib.GeneratePrivateKey()
 
-		account, _ := NewChildAccountBuilder(childPriv.PublicKey(), parentPriv.PublicKey()).Build()
+		// Child accounts must have all 3 comm channels
+		account, _ := NewChildAccountBuilder(childPriv.PublicKey(), parentPriv.PublicKey()).
+			WithStdInHedera("0.0.111").
+			WithStdOutHedera("0.0.222").
+			WithStdErrHedera("0.0.333").
+			Build()
 		str := account.String()
 
 		if !strings.Contains(str, "Child") {
@@ -478,16 +487,14 @@ func TestReachableAddrs_StringsSerialization(t *testing.T) {
 
 func TestNeuronAccount_JSONCompatibleStructure(t *testing.T) {
 	// This test verifies the JSON structure matches expected external format
-	t.Run("JSON structure matches spec", func(t *testing.T) {
+	t.Run("JSON structure matches spec for parent", func(t *testing.T) {
 		privKey, _ := keylib.GeneratePrivateKey()
 		pubKey := privKey.PublicKey()
 		did := newConcurrentMockDID(pubKey)
 		peerID, _ := pubKey.PeerID()
 
+		// Parent accounts must NOT have comm channels
 		account, _ := NewParentAccountBuilder(pubKey, did).
-			WithStdInHedera("0.0.111").
-			WithStdOutHedera("0.0.222").
-			WithStdErrHedera("0.0.333").
 			WithReachableAddr("/ip4/192.168.1.1/tcp/4001/p2p/" + peerID.String()).
 			Build()
 
@@ -525,8 +532,54 @@ func TestNeuronAccount_JSONCompatibleStructure(t *testing.T) {
 		if parsed.AccountType != "Parent" {
 			t.Errorf("expected accountType=Parent, got %s", parsed.AccountType)
 		}
+		if parsed.DID == "" {
+			t.Error("did field missing or empty for parent account")
+		}
+	})
+
+	t.Run("JSON structure matches spec for child with comm channels", func(t *testing.T) {
+		parentPriv, _ := keylib.GeneratePrivateKey()
+		parentPubKey := parentPriv.PublicKey()
+
+		childPriv, _ := keylib.GeneratePrivateKey()
+		childPubKey := childPriv.PublicKey()
+		childPeerID, _ := childPubKey.PeerID()
+
+		// Child accounts must have all 3 comm channels
+		account, _ := NewChildAccountBuilder(childPubKey, parentPubKey).
+			WithStdInHedera("0.0.111").
+			WithStdOutHedera("0.0.222").
+			WithStdErrHedera("0.0.333").
+			WithReachableAddr("/ip4/192.168.1.1/tcp/4001/p2p/" + childPeerID.String()).
+			Build()
+
+		data, _ := account.MarshalJSON()
+
+		type expectedJSON struct {
+			PublicKey      string   `json:"publicKey"`
+			PeerID         string   `json:"peerId"`
+			EVMAddress     string   `json:"evmAddress"`
+			AccountType    string   `json:"accountType"`
+			ParentPubKey   string   `json:"parentPublicKey,omitempty"`
+			StdIn          string   `json:"stdIn,omitempty"`
+			StdOut         string   `json:"stdOut,omitempty"`
+			StdErr         string   `json:"stdErr,omitempty"`
+			ReachableAddrs []string `json:"reachableAddrs,omitempty"`
+		}
+
+		var parsed expectedJSON
+		if err := json.Unmarshal(data, &parsed); err != nil {
+			t.Fatalf("failed to parse into expected structure: %v", err)
+		}
+
+		if parsed.AccountType != "Child" {
+			t.Errorf("expected accountType=Child, got %s", parsed.AccountType)
+		}
 		if parsed.StdIn == "" {
-			t.Error("stdIn field missing or empty")
+			t.Error("stdIn field missing or empty for child account")
+		}
+		if parsed.ParentPubKey == "" {
+			t.Error("parentPublicKey field missing or empty for child account")
 		}
 	})
 }

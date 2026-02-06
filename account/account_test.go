@@ -52,6 +52,7 @@ func newAccountMockDID(pubKey keylib.NeuronPublicKey) *accountMockDID {
 }
 
 // createTestParentAccount creates a valid parent account for testing
+// Per spec: Parent accounts must NOT have comm channels
 func createTestParentAccount(t *testing.T) NeuronAccount {
 	t.Helper()
 	privKey, _ := keylib.GeneratePrivateKey()
@@ -59,9 +60,6 @@ func createTestParentAccount(t *testing.T) NeuronAccount {
 	did := newAccountMockDID(pubKey)
 
 	account, err := NewParentAccountBuilder(pubKey, did).
-		WithStdInHedera("0.0.111").
-		WithStdOutHedera("0.0.222").
-		WithStdErrHedera("0.0.333").
 		Build()
 	if err != nil {
 		t.Fatalf("failed to create parent account: %v", err)
@@ -70,13 +68,16 @@ func createTestParentAccount(t *testing.T) NeuronAccount {
 }
 
 // createTestChildAccount creates a valid child account for testing
+// Per spec: Child accounts must have ALL 3 comm channels
 func createTestChildAccount(t *testing.T) NeuronAccount {
 	t.Helper()
 	childPriv, _ := keylib.GeneratePrivateKey()
 	parentPriv, _ := keylib.GeneratePrivateKey()
 
 	account, err := NewChildAccountBuilder(childPriv.PublicKey(), parentPriv.PublicKey()).
-		WithStdInHedera("0.0.444").
+		WithStdInHedera("0.0.111").
+		WithStdOutHedera("0.0.222").
+		WithStdErrHedera("0.0.333").
 		Build()
 	if err != nil {
 		t.Fatalf("failed to create child account: %v", err)
@@ -223,41 +224,40 @@ func TestNeuronAccount_HierarchyAccessors(t *testing.T) {
 // =============================================================================
 
 func TestNeuronAccount_CommAccessors(t *testing.T) {
+	// Note: Per spec, comm channels are only allowed on Child accounts
 	t.Run("StdIn returns set address", func(t *testing.T) {
-		account := createTestParentAccount(t)
+		account := createTestChildAccount(t)
 		if account.StdIn().Locator() != "0.0.111" {
 			t.Errorf("StdIn = %v, want '0.0.111'", account.StdIn().Locator())
 		}
 	})
 
 	t.Run("StdOut returns set address", func(t *testing.T) {
-		account := createTestParentAccount(t)
+		account := createTestChildAccount(t)
 		if account.StdOut().Locator() != "0.0.222" {
 			t.Errorf("StdOut = %v, want '0.0.222'", account.StdOut().Locator())
 		}
 	})
 
 	t.Run("StdErr returns set address", func(t *testing.T) {
-		account := createTestParentAccount(t)
+		account := createTestChildAccount(t)
 		if account.StdErr().Locator() != "0.0.333" {
 			t.Errorf("StdErr = %v, want '0.0.333'", account.StdErr().Locator())
 		}
 	})
 
-	t.Run("unset addresses return zero values", func(t *testing.T) {
-		privKey, _ := keylib.GeneratePrivateKey()
-		did := newAccountMockDID(privKey.PublicKey())
-
-		account, _ := NewParentAccountBuilder(privKey.PublicKey(), did).Build()
+	t.Run("unset addresses return zero values for parent", func(t *testing.T) {
+		// Parent accounts don't have comm channels per spec
+		account := createTestParentAccount(t)
 
 		if !account.StdIn().IsZero() {
-			t.Error("unset StdIn should be zero")
+			t.Error("parent StdIn should be zero")
 		}
 		if !account.StdOut().IsZero() {
-			t.Error("unset StdOut should be zero")
+			t.Error("parent StdOut should be zero")
 		}
 		if !account.StdErr().IsZero() {
-			t.Error("unset StdErr should be zero")
+			t.Error("parent StdErr should be zero")
 		}
 	})
 }
@@ -345,15 +345,17 @@ func TestNeuronAccount_Validate_Parent(t *testing.T) {
 		}
 	})
 
-	t.Run("zero public key fails validation", func(t *testing.T) {
+	t.Run("zero account fails validation", func(t *testing.T) {
+		// A zero NeuronAccount has an invalid account type (Unspecified)
+		// which is checked first in Validate()
 		var account NeuronAccount
 		err := account.Validate()
 		if err == nil {
-			t.Fatal("expected error for zero public key")
+			t.Fatal("expected error for zero account")
 		}
 		var ae *AccountError
-		if errors.As(err, &ae) && ae.Kind != ErrKindZeroValue {
-			t.Errorf("error Kind = %v, want %v", ae.Kind, ErrKindZeroValue)
+		if errors.As(err, &ae) && ae.Kind != ErrKindInvalidAccount {
+			t.Errorf("error Kind = %v, want %v (invalid account type)", ae.Kind, ErrKindInvalidAccount)
 		}
 	})
 
@@ -393,7 +395,15 @@ func TestNeuronAccount_Validate_Child(t *testing.T) {
 		childPriv, _ := keylib.GeneratePrivateKey()
 		parentPriv, _ := keylib.GeneratePrivateKey()
 
-		account, _ := NewChildAccountBuilder(childPriv.PublicKey(), parentPriv.PublicKey()).Build()
+		// Child accounts require all 3 comm channels per spec
+		account, err := NewChildAccountBuilder(childPriv.PublicKey(), parentPriv.PublicKey()).
+			WithStdInHedera("0.0.111").
+			WithStdOutHedera("0.0.222").
+			WithStdErrHedera("0.0.333").
+			Build()
+		if err != nil {
+			t.Fatalf("Build error: %v", err)
+		}
 
 		if err := account.Validate(); err != nil {
 			t.Errorf("Validate() error = %v", err)
@@ -461,12 +471,22 @@ func TestNeuronAccount_ValidateAll(t *testing.T) {
 	})
 
 	t.Run("ValidateAll collects multiple errors", func(t *testing.T) {
-		var account NeuronAccount
+		// Create a child account with missing comm channels to generate multiple errors
+		childPriv, _ := keylib.GeneratePrivateKey()
+		parentPriv, _ := keylib.GeneratePrivateKey()
+
+		// Manually construct to bypass Build() validation
+		account := NeuronAccount{
+			accountType:  AccountTypeChild,
+			publicKey:    childPriv.PublicKey(),
+			parentPubKey: parentPriv.PublicKey(),
+			// Missing all 3 comm channels
+		}
 		result := account.ValidateAll()
 
-		// Should have at least errors for zero public key and invalid account type
-		if len(result.Errors()) < 2 {
-			t.Errorf("expected at least 2 errors, got %d", len(result.Errors()))
+		// Should have at least error for missing comm channels
+		if !result.HasErrors() {
+			t.Error("expected errors for missing comm channels")
 		}
 	})
 }
@@ -481,8 +501,15 @@ func TestNeuronAccount_Equal(t *testing.T) {
 		pubKey, _ := keylib.ParsePublicKeyHex(testPubKeyHex)
 		did := newAccountMockDID(pubKey)
 
-		account1, _ := NewParentAccountBuilder(pubKey, did).Build()
-		account2, _ := NewParentAccountBuilder(pubKey, did).WithStdInHedera("0.0.999").Build()
+		// Both parent accounts with same public key should be equal
+		account1, err := NewParentAccountBuilder(pubKey, did).Build()
+		if err != nil {
+			t.Fatalf("Build error: %v", err)
+		}
+		account2, err := NewParentAccountBuilder(pubKey, did).Build()
+		if err != nil {
+			t.Fatalf("Build error: %v", err)
+		}
 
 		if !account1.Equal(account2) {
 			t.Error("accounts with same public key should be equal")
@@ -528,10 +555,13 @@ func TestNeuronAccount_MarshalJSON(t *testing.T) {
 		pubKey, _ := keylib.ParsePublicKeyHex(testPubKeyHex)
 		did := newAccountMockDID(pubKey)
 
-		account, _ := NewParentAccountBuilder(pubKey, did).
-			WithHederaTopics("0.0.111", "0.0.222", "0.0.333").
+		// Parent accounts don't have comm channels per spec
+		account, err := NewParentAccountBuilder(pubKey, did).
 			WithReachableAddr(addr).
 			Build()
+		if err != nil {
+			t.Fatalf("Build error: %v", err)
+		}
 
 		data, err := json.Marshal(account)
 		if err != nil {
@@ -638,7 +668,8 @@ func TestNeuronAccount_MarshalJSON(t *testing.T) {
 	})
 
 	t.Run("includes communication addresses when set", func(t *testing.T) {
-		account := createTestParentAccount(t)
+		// Per spec, only child accounts have comm channels
+		account := createTestChildAccount(t)
 
 		data, err := json.Marshal(account)
 		if err != nil {
@@ -697,12 +728,8 @@ func TestNeuronAccount_MarshalJSON(t *testing.T) {
 	})
 
 	t.Run("formats are correct", func(t *testing.T) {
-		pubKey, _ := keylib.ParsePublicKeyHex(testPubKeyHex)
-		did := newAccountMockDID(pubKey)
-
-		account, _ := NewParentAccountBuilder(pubKey, did).
-			WithStdInHedera("0.0.111").
-			Build()
+		// Use child account since it has comm channels
+		account := createTestChildAccount(t)
 
 		data, err := json.Marshal(account)
 		if err != nil {
@@ -720,8 +747,8 @@ func TestNeuronAccount_MarshalJSON(t *testing.T) {
 
 		// AccountType should be string
 		at := result["accountType"].(string)
-		if at != "Parent" {
-			t.Errorf("accountType = %v, want 'Parent'", at)
+		if at != "Child" {
+			t.Errorf("accountType = %v, want 'Child'", at)
 		}
 
 		// stdIn should be kind:locator format
@@ -798,9 +825,8 @@ func TestNeuronAccount_Integration(t *testing.T) {
 		pubKey, _ := keylib.ParsePublicKeyHex(testPubKeyHex)
 		did := newAccountMockDID(pubKey)
 
-		// Build
+		// Build - Parent accounts don't have comm channels per spec
 		account, err := NewParentAccountBuilder(pubKey, did).
-			WithHederaTopics("0.0.111", "0.0.222", "0.0.333").
 			WithReachableAddr(addr).
 			Build()
 		if err != nil {
@@ -828,8 +854,9 @@ func TestNeuronAccount_Integration(t *testing.T) {
 		if account.DID() == nil {
 			t.Error("DID should not be nil")
 		}
-		if account.StdIn().Locator() != "0.0.111" {
-			t.Error("StdIn mismatch")
+		// Parent accounts don't have comm channels
+		if !account.StdIn().IsZero() {
+			t.Error("parent StdIn should be zero")
 		}
 		if len(account.ReachableAddrs().Addrs()) != 1 {
 			t.Error("should have 1 reachable addr")
@@ -860,9 +887,11 @@ func TestNeuronAccount_Integration(t *testing.T) {
 		childPeerID, _ := childPubKey.PeerID()
 		addr := "/ip4/192.168.1.1/tcp/4001/p2p/" + childPeerID.String()
 
-		// Build
+		// Build - Child accounts require all 3 comm channels per spec
 		account, err := NewChildAccountBuilder(childPubKey, parentPubKey).
 			WithStdInHedera("0.0.111").
+			WithStdOutHedera("0.0.222").
+			WithStdErrHedera("0.0.333").
 			WithReachableAddr(addr).
 			Build()
 		if err != nil {

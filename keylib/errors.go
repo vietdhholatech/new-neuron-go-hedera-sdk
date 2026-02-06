@@ -30,6 +30,11 @@ const (
 	ErrKindDerivation
 	// ErrKindUnsupportedKeyType indicates Ed25519 or other unsupported type.
 	ErrKindUnsupportedKeyType
+	// ErrKindInvalidThreshold indicates invalid M-of-N threshold configuration.
+	ErrKindInvalidThreshold
+	// ErrKindSDKError indicates an underlying blockchain SDK operation failed.
+	// The wrapped error preserves the original SDK error with Neuron context.
+	ErrKindSDKError
 )
 
 // String returns a human-readable name for the error kind.
@@ -55,6 +60,10 @@ func (k ErrorKind) String() string {
 		return "Derivation"
 	case ErrKindUnsupportedKeyType:
 		return "UnsupportedKeyType"
+	case ErrKindInvalidThreshold:
+		return "InvalidThreshold"
+	case ErrKindSDKError:
+		return "SDKError"
 	default:
 		return "Unknown"
 	}
@@ -175,4 +184,21 @@ func errDerivation(op string, reason string, err error) *KeyError {
 // wrapError wraps an existing error with additional context.
 func wrapError(op string, kind ErrorKind, details string, err error) *KeyError {
 	return newKeyError(op, kind, details, err)
+}
+
+// errSDKError creates an error for underlying blockchain SDK failures.
+func errSDKError(op string, reason string, err error) *KeyError {
+	return newKeyError(op, ErrKindSDKError, reason, err)
+}
+
+// errInvalidThreshold creates an error for invalid M-of-N threshold configuration.
+func errInvalidThreshold(op string, threshold, total int, reason string) *KeyError {
+	return newKeyError(op, ErrKindInvalidThreshold,
+		fmt.Sprintf("invalid threshold %d-of-%d: %s", threshold, total, reason), nil)
+}
+
+// errDuplicateKey creates an error for duplicate keys in a MultisigKey.
+func errDuplicateKey(op string, index int) *KeyError {
+	return newKeyError(op, ErrKindInvalidKey,
+		fmt.Sprintf("duplicate public key at index %d", index), nil)
 }

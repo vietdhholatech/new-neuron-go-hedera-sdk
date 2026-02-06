@@ -41,22 +41,3 @@ func secureZero(b []byte) {
 func secureZeroArray32(b *[32]byte) {
 	clear(b[:])
 }
-
-// constantTimeSelect returns a if selector is 1, b if selector is 0.
-// The selection is done in constant time.
-func constantTimeSelect(selector int, a, b []byte) []byte {
-	if len(a) != len(b) {
-		// Different lengths - can't do constant time selection
-		// Return based on selector (not constant time, but we have no choice)
-		if selector == 1 {
-			return a
-		}
-		return b
-	}
-
-	result := make([]byte, len(a))
-	for i := range result {
-		result[i] = byte(subtle.ConstantTimeSelect(selector, int(a[i]), int(b[i])))
-	}
-	return result
-}

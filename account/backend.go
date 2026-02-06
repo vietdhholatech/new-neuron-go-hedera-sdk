@@ -6,6 +6,21 @@ package account
 // new messaging technologies to be added without modifying the core
 // account package.
 //
+// # Backend Lifecycle
+//
+// The backend system follows this lifecycle:
+//
+//  1. Registration (Package Init): Backends call RegisterBackend() in init()
+//     - Registry validates metadata completeness
+//     - Panics on duplicate registration or incomplete metadata
+//  2. Construction (NewCommAddress): Backend parses and validates locator
+//     - Calls backend.ParseLocator() for registered backends
+//     - Allows unknown backends with non-empty locator (forward compatibility)
+//  3. Validation (CommAddress.Validate): Re-validates locator format
+//     - Calls backend.ValidateLocator() for registered backends
+//  4. Technology Mapping: Maps CommAddressKind to TopicTechnology
+//     - Calls backend.Technology() for registered backends
+//
 // Example implementation:
 //
 //	func init() {
@@ -29,6 +44,12 @@ type Backend interface {
 	// ParseLocator parses and normalizes a locator string.
 	// This allows backends to canonicalize their locators.
 	// For most backends, this simply validates and returns the locator unchanged.
+	//
+	// Idempotency Contract:
+	// ParseLocator must be idempotent - calling it multiple times with the
+	// same valid input must return the same result. That is, for any valid
+	// locator string s:
+	//   ParseLocator(s) == ParseLocator(ParseLocator(s))
 	ParseLocator(locator string) (string, error)
 
 	// Metadata returns information about this backend.
@@ -63,6 +84,11 @@ type BackendMetadata struct {
 	// RequiresConfig indicates whether this backend needs additional
 	// configuration beyond the locator (e.g., connection strings, credentials).
 	RequiresConfig bool
+
+	// Version is the semantic version of the backend implementation.
+	// Example: "1.0.0"
+	// Empty string indicates an unversioned backend (for backward compatibility).
+	Version string
 
 	// Properties holds additional backend-specific properties.
 	// This is an extension point for backend-specific metadata.

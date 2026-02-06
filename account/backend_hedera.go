@@ -59,6 +59,7 @@ func (h *hederaBackend) Metadata() BackendMetadata {
 		LocatorFormat:  "shard.realm.topic",
 		LocatorExample: "0.0.12345",
 		RequiresConfig: true, // Requires Hedera network credentials
+		Version:        "1.0.0",
 		Properties: map[string]string{
 			"network":      "mainnet, testnet, or previewnet",
 			"orderingType": "consensus-time",

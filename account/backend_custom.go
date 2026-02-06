@@ -44,6 +44,7 @@ func (c *customBackend) Metadata() BackendMetadata {
 		LocatorFormat:  "implementation-defined",
 		LocatorExample: "my-custom-endpoint",
 		RequiresConfig: false,
+		Version:        "1.0.0",
 		Properties:     map[string]string{},
 	}
 }

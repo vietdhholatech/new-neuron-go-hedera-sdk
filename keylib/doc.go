@@ -16,6 +16,7 @@
 //   - [PeerID]: libp2p peer identifier for P2P networking
 //   - [Signature]: ECDSA signature with recovery support
 //   - [EncryptedPrivateKey]: Password-protected private key storage
+//   - [MultisigKey]: M-of-N threshold key configuration for Shared accounts
 //
 // # Key Strategy
 //

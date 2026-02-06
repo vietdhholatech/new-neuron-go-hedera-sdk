@@ -656,10 +656,8 @@ func TestBuild_ParentAccount(t *testing.T) {
 		pubKey, _ := keylib.ParsePublicKeyHex(testPubKeyHex)
 		did := newBuilderMockDID(pubKey)
 
+		// Parent accounts don't have comm channels per spec
 		account, err := NewParentAccountBuilder(pubKey, did).
-			WithStdInHedera("0.0.111").
-			WithStdOutHedera("0.0.222").
-			WithStdErrHedera("0.0.333").
 			WithReachableAddr(testMultiaddr).
 			Build()
 
@@ -678,8 +676,9 @@ func TestBuild_ParentAccount(t *testing.T) {
 		if !account.IsParent() {
 			t.Error("IsParent() should return true")
 		}
-		if account.StdIn().Locator() != "0.0.111" {
-			t.Errorf("StdIn = %v, want '0.0.111'", account.StdIn().Locator())
+		// Parent accounts should have zero comm addresses
+		if !account.StdIn().IsZero() {
+			t.Error("Parent StdIn should be zero")
 		}
 	})
 
@@ -747,7 +746,12 @@ func TestBuild_ChildAccount(t *testing.T) {
 		childPubKey := childPriv.PublicKey()
 		parentPubKey := parentPriv.PublicKey()
 
-		account, err := NewChildAccountBuilder(childPubKey, parentPubKey).Build()
+		// Child accounts require all 3 comm channels per spec
+		account, err := NewChildAccountBuilder(childPubKey, parentPubKey).
+			WithStdInHedera("0.0.111").
+			WithStdOutHedera("0.0.222").
+			WithStdErrHedera("0.0.333").
+			Build()
 
 		if err != nil {
 			t.Fatalf("Build() error = %v", err)
@@ -770,7 +774,12 @@ func TestBuild_ChildAccount(t *testing.T) {
 		privKey, _ := keylib.GeneratePrivateKey()
 		pubKey := privKey.PublicKey()
 
-		_, err := NewChildAccountBuilder(pubKey, pubKey).Build()
+		// Even with comm channels, same key should fail
+		_, err := NewChildAccountBuilder(pubKey, pubKey).
+			WithStdInHedera("0.0.111").
+			WithStdOutHedera("0.0.222").
+			WithStdErrHedera("0.0.333").
+			Build()
 
 		if err == nil {
 			t.Fatal("expected error when child equals parent")
@@ -785,7 +794,12 @@ func TestBuild_ChildAccount(t *testing.T) {
 		childPriv, _ := keylib.GeneratePrivateKey()
 		parentPriv, _ := keylib.GeneratePrivateKey()
 
-		account, err := NewChildAccountBuilder(childPriv.PublicKey(), parentPriv.PublicKey()).Build()
+		// Child accounts require all 3 comm channels
+		account, err := NewChildAccountBuilder(childPriv.PublicKey(), parentPriv.PublicKey()).
+			WithStdInHedera("0.0.111").
+			WithStdOutHedera("0.0.222").
+			WithStdErrHedera("0.0.333").
+			Build()
 
 		if err != nil {
 			t.Fatalf("Build() error = %v", err)
@@ -1015,8 +1029,8 @@ func TestBuilder_Integration(t *testing.T) {
 		pubKey, _ := keylib.ParsePublicKeyHex(testPubKeyHex)
 		did := newBuilderMockDID(pubKey)
 
+		// Parent accounts don't have comm channels per spec
 		account, err := NewParentAccountBuilder(pubKey, did).
-			WithHederaTopics("0.0.111", "0.0.222", "0.0.333").
 			WithReachableAddrs(addr1, addr2).
 			Build()
 
@@ -1037,14 +1051,15 @@ func TestBuilder_Integration(t *testing.T) {
 		if account.AccountType() != AccountTypeParent {
 			t.Error("AccountType should be Parent")
 		}
-		if account.StdIn().Locator() != "0.0.111" {
-			t.Error("StdIn not set correctly")
+		// Parent accounts have zero comm addresses
+		if !account.StdIn().IsZero() {
+			t.Error("Parent StdIn should be zero")
 		}
-		if account.StdOut().Locator() != "0.0.222" {
-			t.Error("StdOut not set correctly")
+		if !account.StdOut().IsZero() {
+			t.Error("Parent StdOut should be zero")
 		}
-		if account.StdErr().Locator() != "0.0.333" {
-			t.Error("StdErr not set correctly")
+		if !account.StdErr().IsZero() {
+			t.Error("Parent StdErr should be zero")
 		}
 		if len(account.ReachableAddrs().Addrs()) != 2 {
 			t.Errorf("expected 2 reachable addrs, got %d", len(account.ReachableAddrs().Addrs()))
@@ -1060,8 +1075,11 @@ func TestBuilder_Integration(t *testing.T) {
 		childPeerID, _ := childPubKey.PeerID()
 		addr := "/ip4/192.168.1.1/tcp/4001/p2p/" + childPeerID.String()
 
+		// Child accounts require all 3 comm channels per spec
 		account, err := NewChildAccountBuilder(childPubKey, parentPubKey).
 			WithStdInHedera("0.0.111").
+			WithStdOutHedera("0.0.222").
+			WithStdErrHedera("0.0.333").
 			WithReachableAddr(addr).
 			Build()
 

@@ -17,7 +17,6 @@
 package didkey
 
 import (
-	"bytes"
 	"fmt"
 	"strings"
 
@@ -26,9 +25,12 @@ import (
 	"github.com/mr-tron/base58"
 )
 
-// Multicodec identifier for secp256k1 public key (compressed).
-// See: https://github.com/multiformats/multicodec/blob/master/table.csv
-const secp256k1PubMulticodec = 0xe7
+func init() {
+	// Register did:key parser with the account package
+	account.RegisterDIDParser(account.DIDMethodKey, func(didString string) (account.NeuronDID, error) {
+		return Parse(didString)
+	})
+}
 
 // Ensure DIDKey implements the required interfaces.
 var (
@@ -246,25 +248,4 @@ func (d *DIDKey) VerifySignature(message []byte, signature keylib.Signature) boo
 // and will return an error indicating the limitation.
 func DIDKeyFromEVMAddress(addr keylib.EVMAddress) (*DIDKey, error) {
 	return nil, fmt.Errorf("didkey: cannot create did:key from EVM address; public key is required (EVM addresses are one-way derived)")
-}
-
-// multibaseEncode encodes bytes as multibase base58btc with 'z' prefix.
-func multibaseEncode(data []byte) string {
-	return "z" + base58.Encode(data)
-}
-
-// multibaseDecode decodes a multibase base58btc string (must have 'z' prefix).
-func multibaseDecode(s string) ([]byte, error) {
-	if len(s) == 0 || s[0] != 'z' {
-		return nil, fmt.Errorf("expected 'z' prefix for base58btc")
-	}
-	return base58.Decode(s[1:])
-}
-
-// equalBytes compares two byte slices in constant time.
-func equalBytes(a, b []byte) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	return bytes.Equal(a, b)
 }

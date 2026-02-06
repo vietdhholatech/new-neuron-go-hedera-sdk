@@ -1,162 +1,86 @@
 # Code Style and Conventions
 
-## Naming Conventions
-
-### Factory Functions
-| Prefix | Purpose | Example |
-|--------|---------|---------|
-| `Parse*` | Construct from string (validates) | `ParsePrivateKeyHex()` |
-| `*FromBytes` | Construct from raw bytes | `PrivateKeyFromBytes()` |
-| `*FromHedera` | Elevate from Hedera SDK type | `PrivateKeyFromHedera()` |
-| `Generate*` | Create new random value | `GeneratePrivateKey()` |
-
-### Conversion Methods
-| Prefix | Purpose | Example |
-|--------|---------|---------|
-| `To*` | Extract/convert to external type | `ToHederaPrivateKey()` |
-| `*Bytes()` | Serialize to raw bytes | `Bytes()`, `CompressedBytes()` |
-| `*Hex()` | Serialize to hex string | `Hex()`, `HexWithoutPrefix()` |
-
-### Validation Methods
-| Pattern | Purpose | Example |
-|---------|---------|---------|
-| `IsZero()` | Check if zero/invalid value | `key.IsZero()` |
-| `Validate()` | Validate with error | `peerID.Validate()` |
-| `Matches*` | Constant-time equality check | `MatchesEVMAddress()` |
-| `Equal()` | Type-safe equality | `key1.Equal(key2)` |
-
-### Safe Variants
-Functions that could silently fail have `*Safe()` variants that return errors:
-- `EVMAddressSafe()` - prevents burn address
-- `ToHederaPrivateKeySafe()` - returns error on failure
-- `ToHederaPublicKeySafe()` - returns error on failure
-
-## Type Design
-
-### Immutable Types
-All core types are immutable after construction:
-```go
-type NeuronPrivateKey struct {
-    key *secp256k1.PrivateKey  // unexported, never nil after valid construction
-}
-
-type NeuronPublicKey struct {
-    key *secp256k1.PublicKey   // unexported
-}
-
-type EVMAddress struct {
-    addr [20]byte              // fixed-size array
-}
-```
-
-### Zero-Value Safety
-- Zero-value structs are explicitly invalid
-- `IsZero()` method indicates invalid state
-- Factory functions validate all inputs
-
-## Error Handling
-
-### KeyError Type
-```go
-type KeyError struct {
-    Op      string    // Operation (e.g., "ParsePrivateKeyHex")
-    Kind    ErrorKind // Category
-    Details string    // Human-readable explanation
-    Err     error     // Underlying error
-}
-```
-
-### ErrorKind Values
-- `ErrKindInvalidFormat` - Wrong format
-- `ErrKindInvalidLength` - Wrong length
-- `ErrKindInvalidHex` - Invalid hex character
-- `ErrKindInvalidKey` - Invalid key value
-- `ErrKindZeroValue` - Zero/uninitialized value
-- `ErrKindKeyMismatch` - Key mismatch
-- `ErrKindEncryption` - Encryption/decryption error
-- `ErrKindMnemonic` - Mnemonic error
-- `ErrKindDerivation` - Key derivation error
-- `ErrKindUnsupportedKeyType` - Unsupported key type (Ed25519)
+## General Go Style
+- Follow standard Go conventions (effective Go, Go code review comments)
+- Use `gofmt` for formatting
+- Package names are lowercase, single-word (no underscores or mixedCaps)
 
 ## Documentation
+- Each package has a `doc.go` file with comprehensive package-level documentation
+- Document all exported types, functions, and methods
+- Use godoc-style comments with examples where appropriate
 
-### Godoc Conventions
+## Error Handling
+- Use structured error types with rich context:
+  ```go
+  type KeyError struct {
+      Op      string    // Operation that failed
+      Kind    ErrorKind // Error category for programmatic handling
+      Details string    // Human-readable explanation
+      Err     error     // Underlying error
+  }
+  ```
+- Never panic in library code; always return errors
+- Use `errors.As()` for error type assertions
+- ErrorKind enum has 12 kinds including `ErrKindSDKError` for wrapping blockchain SDK failures
+
+## Type Design
+- Types are immutable after construction
+- Zero values are invalid; use `IsZero()` methods
+- Provide both safe (return error) and unsafe (return zero value) variants:
+  - `EVMAddress()` returns zero on error
+  - `EVMAddressSafe()` returns error
+
+## Naming Conventions
+- Factory functions: `NewXxx()`, `ParseXxx()`, `GenerateXxx()`
+- Conversion methods: `ToXxx()`, `ToXxxSafe()`
+- Check methods: `IsZero()`, `IsXxx()`
+- Match methods (constant-time): `MatchesXxx()`, `Equal()`
+- Secure cleanup: `Zeroize()`
+
+## Testing Style
+- Table-driven tests with subtests using `t.Run()`
+- Section separators in test files:
+  ```go
+  // =============================================================================
+  // TestSubjectName Tests
+  // =============================================================================
+  ```
+- Descriptive test names: `TestNeuronPrivateKey_PublicKey`
+- Test file naming: `xxx_test.go` in the same package
+
+## Security Patterns
+- Constant-time comparisons for all cryptographic data
+- `Zeroize()` method to clear sensitive data from memory
+- Use Go 1.21+ `clear()` builtin for secure zeroing
+- Password-based encryption uses Argon2id + AES-256-GCM
+
+## Builder Pattern (account module)
+Three account type constructors with type-specific constraints:
 ```go
-// FunctionName does X and returns Y.
-// Detailed description of behavior.
-//
-// # Concurrency
-//
-// Thread safety information.
-//
-// # Blocking
-//
-// I/O characteristics.
-func FunctionName(param Type) (Result, error) {
-    // implementation
-}
+// Parent: requires PublicKey + DID, prohibits comm channels
+parent, err := account.NewParentAccountBuilder(publicKey, did).
+    WithHederaTopics("0.0.111", "0.0.222", "0.0.333").
+    WithReachableAddr("/ip4/...").
+    Build()
+
+// Child: requires PublicKey + Parent, must have all 3 comm channels
+child, err := account.NewChildAccountBuilder(publicKey, parentDID).
+    WithCommAddress(commAddr).
+    Build()
+
+// Shared: requires MultisigKey, prohibits DID/comm/parent/single public key
+shared, err := account.NewSharedAccountBuilder(multisigKey).
+    Build()
 ```
+Builder uses error accumulation (collects all errors, returns on Build()).
 
-### Package Documentation
-- Main package doc in `doc.go`
-- Implementation mapping in `IMPLEMENTATION_MAPPING.md`
+## Interface Design
+- Keep interfaces small and focused
+- Define interfaces where they're used, not where they're implemented
+- Backend system uses registry pattern for extensibility
 
-## Testing Conventions
-
-### Table-Driven Tests
-```go
-func TestFunction(t *testing.T) {
-    tests := []struct {
-        name    string
-        input   string
-        want    Type
-        wantErr bool
-    }{
-        {"valid case", "input", expected, false},
-        {"invalid case", "bad", Type{}, true},
-    }
-    
-    for _, tt := range tests {
-        t.Run(tt.name, func(t *testing.T) {
-            got, err := Function(tt.input)
-            if (err != nil) != tt.wantErr {
-                t.Errorf("error = %v, wantErr %v", err, tt.wantErr)
-            }
-            if !reflect.DeepEqual(got, tt.want) {
-                t.Errorf("got = %v, want %v", got, tt.want)
-            }
-        })
-    }
-}
-```
-
-### Test File Naming
-- Unit tests: `<file>_test.go` (e.g., `private_key_test.go`)
-- Integration tests: `integration_test.go`
-
-## Security Conventions
-
-### Constant-Time Operations
-- All sensitive comparisons use `crypto/subtle`
-- `constantTimeEqual()` for byte slices
-- `secureZero()` for memory clearing
-
-### Memory Safety
-- `Zeroize()` method to clear sensitive data
-- Defer zeroization after use
-- No global mutable state
-
-## Import Organization
-```go
-import (
-    // Standard library
-    "crypto"
-    "encoding/hex"
-    
-    // Third-party
-    "github.com/decred/dcrd/dcrec/secp256k1/v4"
-    
-    // Internal packages
-    "github.com/aspect-build/neuron-go-hedera-sdk/keylib"
-)
-```
+## Comments
+- Avoid redundant comments that repeat the code
+- Comment on "why", not "what"
+- Use `// TODO:` for incomplete items

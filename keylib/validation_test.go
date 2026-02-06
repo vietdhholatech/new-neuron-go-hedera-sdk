@@ -2,6 +2,7 @@ package keylib
 
 import (
 	"math/big"
+	"strings"
 	"testing"
 )
 
@@ -412,6 +413,78 @@ func TestKeyError(t *testing.T) {
 		unwrapped := err.Unwrap()
 		if unwrapped != inner {
 			t.Error("Unwrap should return underlying error")
+		}
+	})
+}
+
+// =============================================================================
+// Hex Input Length Boundary Tests (DoS Prevention)
+// =============================================================================
+
+func TestDecodeHexStrict_RejectsOversizedInput(t *testing.T) {
+	largeInput := strings.Repeat("a", 1000)
+	_, err := decodeHexStrict("test", largeInput)
+	if err == nil {
+		t.Error("should reject oversized input")
+	}
+
+	keyErr, ok := err.(*KeyError)
+	if !ok {
+		t.Fatalf("expected *KeyError, got %T", err)
+	}
+	if keyErr.Kind != ErrKindInvalidLength {
+		t.Errorf("expected ErrKindInvalidLength, got %v", keyErr.Kind)
+	}
+}
+
+func TestDecodeHexStrict_BoundaryConditions(t *testing.T) {
+	t.Run("rejects input over 256 chars", func(t *testing.T) {
+		input := strings.Repeat("a", 257)
+		_, err := decodeHexStrict("test", input)
+		if err == nil {
+			t.Error("should reject 257 char input")
+		}
+	})
+
+	t.Run("accepts input at exactly 256 chars", func(t *testing.T) {
+		// 256 hex chars = 128 bytes
+		input := strings.Repeat("ab", 128)
+		_, err := decodeHexStrict("test", input)
+		if err != nil {
+			t.Errorf("should accept 256 char input: %v", err)
+		}
+	})
+
+	t.Run("accepts input with 0x prefix at 256 chars total", func(t *testing.T) {
+		// 0x + 254 chars = 256 total
+		input := "0x" + strings.Repeat("ab", 127)
+		_, err := decodeHexStrict("test", input)
+		if err != nil {
+			t.Errorf("should accept 256 total chars with prefix: %v", err)
+		}
+	})
+
+	t.Run("rejects 0x prefix with 255 chars after (257 total)", func(t *testing.T) {
+		// 0x + 255 chars = 257 total (over limit)
+		input := "0x" + strings.Repeat("a", 255)
+		_, err := decodeHexStrict("test", input)
+		if err == nil {
+			t.Error("should reject 257 total chars")
+		}
+	})
+
+	t.Run("all existing valid inputs still work", func(t *testing.T) {
+		validInputs := []string{
+			"0x" + strings.Repeat("a", 64),  // 32 bytes (private key)
+			"0x" + strings.Repeat("a", 66),  // 33 bytes (compressed pubkey)
+			"0x" + strings.Repeat("a", 130), // 65 bytes (signature)
+			strings.Repeat("a", 40),         // 20 bytes (address, no prefix)
+		}
+		for _, input := range validInputs {
+			_, err := decodeHexStrict("test", input)
+			if err != nil {
+				t.Errorf("valid input length %d rejected: %v", len(input), err)
+			}
 		}
 	})
 }

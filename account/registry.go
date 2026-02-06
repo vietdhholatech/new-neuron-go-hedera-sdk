@@ -38,6 +38,18 @@ func RegisterBackend(b Backend) {
 		panic("backend kind cannot be empty")
 	}
 
+	// Validate metadata completeness
+	meta := b.Metadata()
+	if meta.DisplayName == "" {
+		panic(fmt.Sprintf("backend %q metadata DisplayName cannot be empty", kind))
+	}
+	if meta.LocatorFormat == "" {
+		panic(fmt.Sprintf("backend %q metadata LocatorFormat cannot be empty", kind))
+	}
+	if meta.LocatorExample == "" {
+		panic(fmt.Sprintf("backend %q metadata LocatorExample cannot be empty", kind))
+	}
+
 	if _, exists := backendRegistry.backends[kind]; exists {
 		panic(fmt.Sprintf("backend %q already registered", kind))
 	}
@@ -96,20 +108,4 @@ func ListBackendsWithMetadata() map[string]BackendMetadata {
 		result[kind] = b.Metadata()
 	}
 	return result
-}
-
-// unregisterBackend removes a backend from the registry.
-// This is primarily intended for testing and should not be used in production code.
-func unregisterBackend(kind string) {
-	backendRegistry.mu.Lock()
-	defer backendRegistry.mu.Unlock()
-	delete(backendRegistry.backends, kind)
-}
-
-// clearRegistry removes all backends from the registry.
-// This is intended only for testing purposes.
-func clearRegistry() {
-	backendRegistry.mu.Lock()
-	defer backendRegistry.mu.Unlock()
-	backendRegistry.backends = make(map[string]Backend)
 }

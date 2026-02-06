@@ -21,20 +21,26 @@
 //
 // # Account Hierarchy
 //
-// NeuronAccounts follow a strict two-level hierarchy:
+// NeuronAccounts follow a strict hierarchy with three account types:
 //
-//   - Parent Account: Has no parent, may have children, MUST have a DID
-//   - Child Account: Has exactly one parent, no children, no DID
+//   - Parent Account: Has no parent, may have children, MUST have a DID,
+//     must NOT have communication channels
+//   - Child Account: Has exactly one parent, no children, no DID,
+//     MUST have all three communication channels (stdIn, stdOut, stdErr)
+//   - Shared Account: M-of-N multisig threshold account using MultisigKey,
+//     no DID, no communication channels, no parent reference
 //
 // This structure ensures clear ownership and administrative boundaries while maintaining
 // system simplicity. Nesting is limited to one level (no grandchildren).
 //
 // # Communication Addresses
 //
-// A NeuronAccount exposes three public communication addresses:
+// Child accounts expose three public communication addresses (all required):
 //   - stdIn: where others send messages to the agent
 //   - stdOut: where the agent publishes outputs/heartbeats
 //   - stdErr: where the agent publishes errors/diagnostics
+//
+// Parent and Shared accounts must NOT have communication channels.
 //
 // These are represented as CommAddress values, which are technology-agnostic.
 // Currently supported backends include:
@@ -68,7 +74,7 @@
 //
 // # Usage Example
 //
-// Creating a Parent account with did:key:
+// Creating a Parent account with did:key (Parent accounts have no comm channels):
 //
 //	import (
 //	    "github.com/aspect-build/neuron-go-hedera-sdk/account"
@@ -77,7 +83,7 @@
 //	)
 //
 //	// Generate or load a key pair
-//	privKey, err := keylib.GenerateKey()
+//	privKey, err := keylib.GeneratePrivateKey()
 //	if err != nil {
 //	    return err
 //	}
@@ -89,12 +95,21 @@
 //	    return err
 //	}
 //
-//	// Build the account
-//	acct, err := account.NewParentAccountBuilder(pubKey, did).
+//	// Build the Parent account (no comm channels)
+//	parent, err := account.NewParentAccountBuilder(pubKey, did).Build()
+//	if err != nil {
+//	    return err
+//	}
+//
+// Creating a Child account (all 3 comm channels required):
+//
+//	childPrivKey, _ := keylib.GeneratePrivateKey()
+//	childPubKey := childPrivKey.PublicKey()
+//
+//	child, err := account.NewChildAccountBuilder(childPubKey, pubKey).
 //	    WithStdInHedera("0.0.1001").
 //	    WithStdOutHedera("0.0.1002").
 //	    WithStdErrHedera("0.0.1003").
-//	    WithReachableAddr("/ip4/203.0.113.10/tcp/4001/p2p/" + pubKey.PeerID().String()).
 //	    Build()
 //	if err != nil {
 //	    return err
@@ -105,6 +120,13 @@
 // NeuronAccount is immutable after construction and is safe for concurrent use.
 // The AccountBuilder is NOT thread-safe and should only be used from a single goroutine.
 //
+// # Ledger Attachment
+//
+// A NeuronAccount can be attached to ledger infrastructure (blockchain) via LedgerAttachment:
+//   - LedgerAttachment: Links account to a specific ledger address
+//   - AttachmentState: Tracks attachment lifecycle (Detached, Attached, Verified)
+//   - VerificationStatus: Tracks verification result (None, Pending, Verified, Failed)
+//
 // # Blockchain Interfaces
 //
 // The package defines interfaces for blockchain operations but does NOT implement them:
@@ -112,6 +134,8 @@
 //   - AccountVerifier: Verifies account existence on-chain
 //   - EndpointVerifier: Verifies communication endpoints exist
 //   - RegistryResolver: Resolves accounts from yellow pages registries
+//   - LedgerVerifier: Verifies account-ledger relationships including key ownership,
+//     semantic consistency, and parent-child relationships
 //
 // These interfaces allow blockchain-specific implementations to be provided
 // without coupling this package to any particular chain's SDK.

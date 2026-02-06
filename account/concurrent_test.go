@@ -79,7 +79,6 @@ func TestBuilder_ParallelUsage(t *testing.T) {
 				did := newConcurrentMockDID(pubKey)
 
 				account, err := NewParentAccountBuilder(pubKey, did).
-					WithStdInHedera("0.0.111").
 					Build()
 
 				if err != nil {
@@ -131,6 +130,8 @@ func TestBuilder_ParallelUsage(t *testing.T) {
 
 				account, err := NewChildAccountBuilder(childPubKey, parentPubKey).
 					WithStdInHedera("0.0.444").
+					WithStdOutHedera("0.0.555").
+					WithStdErrHedera("0.0.666").
 					Build()
 
 				if err == nil {
@@ -359,7 +360,6 @@ func TestNeuronAccount_ConcurrentAccessors(t *testing.T) {
 		addr := "/ip4/192.168.1.1/tcp/4001/p2p/" + peerID.String()
 
 		account, err := NewParentAccountBuilder(pubKey, did).
-			WithHederaTopics("0.0.111", "0.0.222", "0.0.333").
 			WithReachableAddr(addr).
 			Build()
 		if err != nil {
@@ -449,7 +449,6 @@ func TestNeuronAccount_ConcurrentAccessors(t *testing.T) {
 		did := newConcurrentMockDID(pubKey)
 
 		account, _ := NewParentAccountBuilder(pubKey, did).
-			WithStdInHedera("0.0.111").
 			Build()
 
 		var wg sync.WaitGroup
@@ -489,11 +488,7 @@ func TestBuilder_StressTest(t *testing.T) {
 
 				b := NewParentAccountBuilder(pubKey, did)
 
-				// Multiple operations
-				b.WithStdInHedera("0.0.111")
-				b.WithStdOutHedera("0.0.222")
-				b.WithStdErrHedera("0.0.333")
-
+				// Build without comm channels (Parent accounts must not have them)
 				_, _ = b.Build()
 			}()
 		}

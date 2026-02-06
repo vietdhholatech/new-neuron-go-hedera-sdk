@@ -512,7 +512,7 @@ func TestScramble_Argon2BoundsValidation(t *testing.T) {
 	})
 
 	t.Run("argon2Memory too high fails", func(t *testing.T) {
-		_, err := key.Scramble("password", WithArgon2Memory(512*1024)) // 512 MiB, max is 256 MiB
+		_, err := key.Scramble("password", WithArgon2Memory(65*1024)) // 65 MiB, max is 64 MiB
 		if err == nil {
 			t.Error("argon2Memory above maximum should fail")
 		}
@@ -541,6 +541,73 @@ func TestScramble_Argon2BoundsValidation(t *testing.T) {
 		)
 		if err != nil {
 			t.Errorf("minimum valid values should work: %v", err)
+		}
+	})
+}
+
+// =============================================================================
+// Argon2 Memory DoS Prevention Tests
+// =============================================================================
+
+func TestUnscramble_RejectsHighMemoryParams(t *testing.T) {
+	// Test that decryption rejects stored params exceeding the new 64 MiB limit.
+	// This prevents DoS via attacker-controlled encrypted key files.
+
+	t.Run("rejects memory > 64 MiB during decryption", func(t *testing.T) {
+		// Simulate an encrypted key with memory > 64 MiB
+		// This would have been valid before the fix but should be rejected now
+		encrypted := EncryptedPrivateKey{
+			Version:       2,
+			Salt:          make([]byte, 16),
+			Nonce:         make([]byte, 12),
+			Ciphertext:    make([]byte, 48),
+			Argon2Time:    3,
+			Argon2Memory:  65 * 1024, // 65 MiB - just over the new limit
+			Argon2Threads: 4,
+		}
+
+		_, err := UnscramblePrivateKey(encrypted, "password")
+		if err == nil {
+			t.Error("should reject memory > 64 MiB")
+		}
+	})
+
+	t.Run("accepts memory at exactly 64 MiB", func(t *testing.T) {
+		// Generate a real encrypted key with 64 MiB (max allowed)
+		privKey, _ := GeneratePrivateKey()
+		encrypted, err := privKey.Scramble("test-password", WithArgon2Memory(64*1024))
+		if err != nil {
+			t.Fatalf("Scramble with 64 MiB should work: %v", err)
+		}
+
+		// Verify decryption works
+		decrypted, err := UnscramblePrivateKey(encrypted, "test-password")
+		if err != nil {
+			t.Fatalf("UnscramblePrivateKey with 64 MiB should work: %v", err)
+		}
+
+		if !decrypted.Equal(privKey) {
+			t.Error("decrypted key should match original")
+		}
+	})
+
+	t.Run("default encryption still works", func(t *testing.T) {
+		// Default is 64 MiB which is now the max - should still work
+		privKey, _ := GeneratePrivateKey()
+		password := "test-password"
+
+		encrypted, err := privKey.Scramble(password)
+		if err != nil {
+			t.Fatalf("Scramble with defaults should work: %v", err)
+		}
+
+		decrypted, err := UnscramblePrivateKey(encrypted, password)
+		if err != nil {
+			t.Fatalf("UnscramblePrivateKey should work: %v", err)
+		}
+
+		if !decrypted.Equal(privKey) {
+			t.Error("decrypted key should match original")
 		}
 	})
 }
